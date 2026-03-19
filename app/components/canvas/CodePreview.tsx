@@ -1,20 +1,20 @@
 import { Copy, Download, FileCode } from "lucide-react";
 import { useMemo, useState } from "react";
+import { DEFAULT_EXPORT_FILENAME } from "~/lib/constants";
 import { generateCode } from "~/lib/iac-generator";
-import type { CanvasNode, Edge } from "~/types";
+import type { CanvasNode } from "~/types";
 
 interface CodePreviewProps {
   nodes: CanvasNode[];
-  edges: Edge[];
   format: "terraform" | "pulumi" | "ansible";
 }
 
-export function CodePreview({ nodes, edges, format }: CodePreviewProps) {
+export function CodePreview({ nodes, format }: CodePreviewProps) {
   const [copied, setCopied] = useState(false);
 
   const generatedCode = useMemo(() => {
-    return generateCode(nodes, edges, format);
-  }, [nodes, edges, format]);
+    return generateCode(nodes, format);
+  }, [nodes, format]);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(generatedCode);
@@ -32,7 +32,7 @@ export function CodePreview({ nodes, edges, format }: CodePreviewProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `cloudforge-infra${extensions[format]}`;
+    a.download = `${DEFAULT_EXPORT_FILENAME}${extensions[format]}`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -66,6 +66,7 @@ export function CodePreview({ nodes, edges, format }: CodePreviewProps) {
               <button
                 type="button"
                 onClick={handleCopy}
+                aria-label="Copy code to clipboard"
                 className="w-full px-4 py-2 bg-[#f38020] hover:bg-[#e07010] text-white rounded text-[13px] font-medium transition-colors flex items-center justify-center gap-2"
               >
                 <Copy className="w-4 h-4" />
@@ -74,6 +75,7 @@ export function CodePreview({ nodes, edges, format }: CodePreviewProps) {
               <button
                 type="button"
                 onClick={handleDownload}
+                aria-label="Download generated code"
                 className="w-full px-4 py-2 bg-[#252525] hover:bg-[#333333] text-[#e3e3e3] rounded text-[13px] font-medium transition-colors flex items-center justify-center gap-2"
               >
                 <Download className="w-4 h-4" />

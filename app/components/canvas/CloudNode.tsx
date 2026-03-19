@@ -2,11 +2,22 @@ import { Handle, type NodeProps, Position } from "@xyflow/react";
 import { Server } from "lucide-react";
 import { memo } from "react";
 import { iconMap } from "~/lib/icons";
-import type { CanvasNode } from "~/types";
+import type { CanvasNode, ComponentCategory } from "~/types";
+
+const categoryColors: Record<ComponentCategory, string> = {
+  compute: "text-blue-400 bg-blue-400/10",
+  network: "text-emerald-400 bg-emerald-400/10",
+  storage: "text-amber-400 bg-amber-400/10",
+  database: "text-purple-400 bg-purple-400/10",
+  security: "text-red-400 bg-red-400/10",
+  dns: "text-cyan-400 bg-cyan-400/10",
+};
 
 function CloudNodeComponent({ data, selected }: NodeProps<CanvasNode>) {
   const { component, label } = data;
   const IconComponent = iconMap[component.icon] || Server;
+  const catColor =
+    categoryColors[component.category] || "text-[#888] bg-[#252525]";
 
   return (
     <div
@@ -16,7 +27,6 @@ function CloudNodeComponent({ data, selected }: NodeProps<CanvasNode>) {
           : "border-[#2a2a2a] bg-[#161616] hover:border-[#f38020]/40 shadow-[0_12px_35px_rgba(0,0,0,0.45)]"
       }`}
     >
-      {/* Top handle */}
       <Handle
         type="target"
         position={Position.Top}
@@ -29,19 +39,22 @@ function CloudNodeComponent({ data, selected }: NodeProps<CanvasNode>) {
             selected ? "bg-[#f38020]/15" : "bg-[#252525]"
           }`}
         >
-          <IconComponent className="w-4 h-4 text-[#f38020]" />
+          <IconComponent
+            className={`w-4 h-4 ${selected ? "text-[#f38020]" : catColor.split(" ")[0]}`}
+          />
         </div>
         <div className="min-w-0">
           <div className="text-[13px] font-medium text-[#e3e3e3] truncate">
             {label}
           </div>
-          <div className="text-[10px] text-[#666] uppercase tracking-wide">
+          <span
+            className={`inline-block text-[9px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded ${catColor}`}
+          >
             {component.category}
-          </div>
+          </span>
         </div>
       </div>
 
-      {/* Bottom handle */}
       <Handle
         type="source"
         position={Position.Bottom}

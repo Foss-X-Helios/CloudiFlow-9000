@@ -153,6 +153,12 @@ export default function Editor() {
 
           <button
             type="button"
+            aria-label="Deploy infrastructure"
+            onClick={() =>
+              window.alert(
+                "Deploy coming soon! For now, copy the generated code and apply it with your CLI.",
+              )
+            }
             className="px-4 py-1.5 bg-gradient-to-r from-[#f38020] to-[#e06000] hover:from-[#ff9030] hover:to-[#f07010] text-white rounded-lg text-[12px] font-medium transition-all duration-200 flex items-center gap-1.5 shadow-[0_0_15px_rgba(243,128,32,0.15)]"
           >
             <Play className="w-3 h-3" />

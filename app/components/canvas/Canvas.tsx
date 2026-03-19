@@ -16,6 +16,7 @@ import { useCallback, useMemo, useState } from "react";
 import "@xyflow/react/dist/style.css";
 
 import { ComponentPanel } from "~/components/panel/ComponentPanel";
+import { isValidConnection as checkValidConnection } from "~/lib/connection-rules";
 import type { CanvasNode, CloudComponent, CloudProvider } from "~/types";
 import { CloudNode } from "./CloudNode";
 import { CodePreview } from "./CodePreview";
@@ -149,6 +150,29 @@ export function Canvas({
     [setNodes],
   );
 
+  const validateConnection = useCallback(
+    (connection: Edge | Connection) => {
+      const sourceNode = nodes.find((n) => n.id === connection.source) as
+        | CanvasNode
+        | undefined;
+      const targetNode = nodes.find((n) => n.id === connection.target) as
+        | CanvasNode
+        | undefined;
+
+      if (!sourceNode || !targetNode) return false;
+
+      // Prevent self-connections
+      if (connection.source === connection.target) return false;
+
+      // Check category rules
+      return checkValidConnection(
+        sourceNode.data.component.category,
+        targetNode.data.component.category,
+      );
+    },
+    [nodes],
+  );
+
   const onNodeDelete = useCallback(
     (nodeId: string) => {
       setNodes((nds) => nds.filter((node) => node.id !== nodeId));
@@ -160,11 +184,9 @@ export function Canvas({
     [setNodes, setEdges],
   );
 
-  const handleDragStart = (_component: CloudComponent) => {};
-
   return (
     <div className="flex h-full w-full">
-      <ComponentPanel provider={provider} onDragStart={handleDragStart} />
+      <ComponentPanel provider={provider} />
 
       <div className="flex-1 flex">
         <div className="flex-1 relative">
@@ -197,6 +219,7 @@ export function Canvas({
               onEdgesChange(edges);
             }}
             onConnect={onConnect}
+            isValidConnection={validateConnection}
             onSelectionChange={onSelectionChange}
             onPaneClick={onPaneClick}
             onDragOver={onDragOver}
@@ -241,23 +264,38 @@ export function Canvas({
           {/* Empty state hint */}
           {nodes.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="text-center">
-                <div className="text-[#333] text-[14px] font-medium mb-1">
-                  Drag components from the left panel
+              <div className="text-center space-y-3">
+                <div className="w-12 h-12 rounded-xl bg-[#f38020]/10 flex items-center justify-center mx-auto">
+                  <svg
+                    className="w-6 h-6 text-[#f38020]/60"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    role="img"
+                    aria-label="Add components"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
                 </div>
-                <div className="text-[#2a2a2a] text-[12px]">
-                  Connect them by dragging between the handles
+                <div>
+                  <div className="text-[#555] text-[14px] font-medium mb-1">
+                    Drag components from the left panel
+                  </div>
+                  <div className="text-[#333] text-[12px]">
+                    Connect them by dragging between the handles
+                  </div>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        <CodePreview
-          nodes={nodes as CanvasNode[]}
-          edges={edges}
-          format={outputFormat}
-        />
+        <CodePreview nodes={nodes as CanvasNode[]} format={outputFormat} />
       </div>
 
       {/* Config panel — slides in when a node is selected */}

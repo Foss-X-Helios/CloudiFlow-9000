@@ -52,6 +52,7 @@ export function NodeConfig({
         <button
           type="button"
           onClick={onClose}
+          aria-label="Close configuration panel"
           className="p-1.5 text-[#555] hover:text-white hover:bg-[#222] rounded-lg transition-colors flex-shrink-0 ml-2"
         >
           <X className="w-4 h-4" />
@@ -153,6 +154,7 @@ export function NodeConfig({
         <button
           type="button"
           onClick={() => onDelete(node.id)}
+          aria-label="Delete this component"
           className="w-full px-4 py-2.5 bg-transparent hover:bg-red-500/10 text-red-500 border border-red-500/30 hover:border-red-500/50 rounded-lg text-[13px] font-medium transition-all"
         >
           Delete Component

@@ -93,3 +93,12 @@ body {
     background-position: 100% center;
   }
 }
+
+/* Focus states for keyboard accessibility */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #f38020;
+  outline-offset: 2px;
+}

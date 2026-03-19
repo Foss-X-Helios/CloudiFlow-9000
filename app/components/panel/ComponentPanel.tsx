@@ -5,7 +5,6 @@ import type { CloudComponent, CloudProvider, ComponentCategory } from "~/types";
 
 interface ComponentPanelProps {
   provider: CloudProvider;
-  onDragStart: (component: CloudComponent) => void;
 }
 
 const categoryLabels: Record<ComponentCategory, string> = {
@@ -26,7 +25,7 @@ const categoryOrder: ComponentCategory[] = [
   "dns",
 ];
 
-export function ComponentPanel({ provider, onDragStart }: ComponentPanelProps) {
+export function ComponentPanel({ provider }: ComponentPanelProps) {
   const components = cloudComponents[provider] || [];
 
   const componentsByCategory = categoryOrder.reduce(
@@ -64,6 +63,7 @@ export function ComponentPanel({ provider, onDragStart }: ComponentPanelProps) {
                     <button
                       type="button"
                       key={component.id}
+                      aria-label={`Drag ${component.name} to canvas`}
                       draggable
                       onDragStart={(e) => {
                         e.dataTransfer.setData(
@@ -71,7 +71,6 @@ export function ComponentPanel({ provider, onDragStart }: ComponentPanelProps) {
                           JSON.stringify(component),
                         );
                         e.dataTransfer.effectAllowed = "copy";
-                        onDragStart(component);
                       }}
                       className="w-full text-left px-2 py-2 rounded hover:bg-[#252525] transition-colors cursor-grab active:cursor-grabbing flex items-center gap-3 group"
                     >

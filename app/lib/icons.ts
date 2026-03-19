@@ -1,13 +1,27 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  Archive,
+  Boxes,
   CloudCog,
+  Container,
   Database,
+  FileKey,
   GitBranch,
   Globe,
   HardDrive,
+  KeyRound,
+  Layers,
+  Lock,
+  Mail,
+  MessageSquare,
+  MonitorCog,
   Network,
+  Router,
   Server,
   Shield,
+  SquareStack,
+  Warehouse,
+  Wifi,
   Zap,
 } from "lucide-react";
 
@@ -21,6 +35,20 @@ export const iconMap: Record<string, LucideIcon> = {
   GitBranch,
   Globe,
   CloudCog,
+  Archive,
+  Boxes,
+  Container,
+  FileKey,
+  KeyRound,
+  Layers,
+  Lock,
+  Mail,
+  MessageSquare,
+  MonitorCog,
+  Router,
+  SquareStack,
+  Warehouse,
+  Wifi,
 };
 
 export type IconName = keyof typeof iconMap;

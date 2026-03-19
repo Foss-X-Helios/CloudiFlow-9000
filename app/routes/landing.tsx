@@ -19,15 +19,15 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { HeroGraph } from "~/components/landing/HeroGraph";
+import { APP_DESCRIPTION, APP_NAME, PROVIDER_COLORS } from "~/lib/constants";
 import { isOnboarded } from "~/lib/store";
 
 export function meta() {
   return [
-    { title: "CloudiFlow-9000 - Visual IaC Generator" },
+    { title: `${APP_NAME} - Visual IaC Generator` },
     {
       name: "description",
-      content:
-        "Build cloud infrastructure visually and generate Terraform, Pulumi, or Ansible code",
+      content: APP_DESCRIPTION,
     },
   ];
 }
@@ -253,9 +253,9 @@ function ProviderOrbs() {
   }, []);
 
   const providers = [
-    { name: "AWS", color: "#FF9900" },
-    { name: "GCP", color: "#4285F4" },
-    { name: "Azure", color: "#0078D4" },
+    { name: "AWS", color: PROVIDER_COLORS.aws },
+    { name: "GCP", color: PROVIDER_COLORS.gcp },
+    { name: "Azure", color: PROVIDER_COLORS.azure },
   ];
 
   return (

@@ -1,3 +1,4 @@
+import { CANVAS_STORAGE_PREFIX, STORAGE_KEY } from "~/lib/constants";
 import type {
   CanvasNode,
   CloudProvider,
@@ -5,8 +6,6 @@ import type {
   Organization,
   Project,
 } from "~/types";
-
-const STORAGE_KEY = "cloudforge_state";
 
 export interface AppState {
   organizations: Organization[];
@@ -110,7 +109,7 @@ export function deleteProject(orgId: string, projectId: string): void {
 
   // Also clean up canvas state
   if (typeof window !== "undefined") {
-    localStorage.removeItem(`cloudforge_canvas_${projectId}`);
+    localStorage.removeItem(`${CANVAS_STORAGE_PREFIX}${projectId}`);
   }
 }
 
@@ -137,7 +136,7 @@ export function getCanvasState(projectId: string): CanvasState {
     return { ...DEFAULT_CANVAS_STATE };
   }
   try {
-    const raw = localStorage.getItem(`cloudforge_canvas_${projectId}`);
+    const raw = localStorage.getItem(`${CANVAS_STORAGE_PREFIX}${projectId}`);
     if (raw) return { ...DEFAULT_CANVAS_STATE, ...JSON.parse(raw) };
   } catch {
     // corrupted
@@ -158,7 +157,10 @@ export function updateCanvasProvider(
 
 export function saveCanvasState(projectId: string, state: CanvasState): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(`cloudforge_canvas_${projectId}`, JSON.stringify(state));
+  localStorage.setItem(
+    `${CANVAS_STORAGE_PREFIX}${projectId}`,
+    JSON.stringify(state),
+  );
 }
 
 // --- Reset ---
