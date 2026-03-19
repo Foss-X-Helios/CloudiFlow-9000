@@ -1,26 +1,25 @@
-import { useCallback, useState, useMemo } from "react";
 import {
-  ReactFlow,
-  MiniMap,
-  Controls,
-  Background,
-  useNodesState,
-  useEdgesState,
   addEdge,
-  type Connection,
-  type Node,
-  type Edge,
-  type OnSelectionChangeParams,
+  Background,
   BackgroundVariant,
+  type Connection,
+  Controls,
+  type Edge,
   MarkerType,
+  MiniMap,
+  type OnSelectionChangeParams,
+  ReactFlow,
+  useEdgesState,
+  useNodesState,
 } from "@xyflow/react";
+import { useCallback, useMemo, useState } from "react";
 import "@xyflow/react/dist/style.css";
 
-import type { CloudComponent, CanvasNode, CloudProvider } from "~/types";
 import { ComponentPanel } from "~/components/panel/ComponentPanel";
+import type { CanvasNode, CloudComponent, CloudProvider } from "~/types";
+import { CloudNode } from "./CloudNode";
 import { CodePreview } from "./CodePreview";
 import { NodeConfig } from "./NodeConfig";
-import { CloudNode } from "./CloudNode";
 
 const initialNodes: CanvasNode[] = [];
 const initialEdges: Edge[] = [];
@@ -36,14 +35,22 @@ interface CanvasProps {
   provider: CloudProvider;
 }
 
-export function Canvas({ outputFormat, onNodesChange, onEdgesChange, provider }: CanvasProps) {
+export function Canvas({
+  outputFormat,
+  onNodesChange,
+  onEdgesChange,
+  provider,
+}: CanvasProps) {
   const [nodes, setNodes, onNodesChangeHandler] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChangeHandler] = useEdgesState(initialEdges);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
   const selectedNode = useMemo(
-    () => (selectedNodeId ? (nodes.find((n) => n.id === selectedNodeId) as CanvasNode | undefined) : undefined),
-    [nodes, selectedNodeId]
+    () =>
+      selectedNodeId
+        ? (nodes.find((n) => n.id === selectedNodeId) as CanvasNode | undefined)
+        : undefined,
+    [nodes, selectedNodeId],
   );
 
   const onConnect = useCallback(
@@ -54,18 +61,28 @@ export function Canvas({ outputFormat, onNodesChange, onEdgesChange, provider }:
             ...connection,
             animated: true,
             style: { stroke: "#f38020", strokeWidth: 2 },
-            markerEnd: { type: MarkerType.ArrowClosed, color: "#f38020", width: 16, height: 16 },
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              color: "#f38020",
+              width: 16,
+              height: 16,
+            },
           },
-          eds
-        )
+          eds,
+        ),
       );
     },
-    [setEdges]
+    [setEdges],
   );
 
-  const onSelectionChange = useCallback(({ nodes: selectedNodes }: OnSelectionChangeParams) => {
-    setSelectedNodeId(selectedNodes.length === 1 ? selectedNodes[0].id : null);
-  }, []);
+  const onSelectionChange = useCallback(
+    ({ nodes: selectedNodes }: OnSelectionChangeParams) => {
+      setSelectedNodeId(
+        selectedNodes.length === 1 ? selectedNodes[0].id : null,
+      );
+    },
+    [],
+  );
 
   const onPaneClick = useCallback(() => {
     setSelectedNodeId(null);
@@ -99,17 +116,20 @@ export function Canvas({ outputFormat, onNodesChange, onEdgesChange, provider }:
         data: {
           component,
           label: `${component.name} ${nodeIdCounter}`,
-          config: component.fields.reduce((acc, field) => {
-            acc[field.name] = field.default ?? "";
-            return acc;
-          }, {} as Record<string, string | number | boolean>),
+          config: component.fields.reduce(
+            (acc, field) => {
+              acc[field.name] = field.default ?? "";
+              return acc;
+            },
+            {} as Record<string, string | number | boolean>,
+          ),
         },
       };
 
       setNodes((nds) => [...nds, newNode]);
       setSelectedNodeId(newNode.id);
     },
-    [provider, setNodes]
+    [setNodes],
   );
 
   const onNodeUpdate = useCallback(
@@ -123,19 +143,21 @@ export function Canvas({ outputFormat, onNodesChange, onEdgesChange, provider }:
             };
           }
           return node;
-        })
+        }),
       );
     },
-    [setNodes]
+    [setNodes],
   );
 
   const onNodeDelete = useCallback(
     (nodeId: string) => {
       setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-      setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+      setEdges((eds) =>
+        eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId),
+      );
       setSelectedNodeId(null);
     },
-    [setNodes, setEdges]
+    [setNodes, setEdges],
   );
 
   const handleDragStart = (_component: CloudComponent) => {};
@@ -154,7 +176,11 @@ export function Canvas({ outputFormat, onNodesChange, onEdgesChange, provider }:
               onNodesChangeHandler(changes);
               const updatedNodes = [...nodes];
               changes.forEach((change) => {
-                if (change.type === "position" && change.position && change.id) {
+                if (
+                  change.type === "position" &&
+                  change.position &&
+                  change.id
+                ) {
                   const idx = updatedNodes.findIndex((n) => n.id === change.id);
                   if (idx !== -1) {
                     updatedNodes[idx] = {
@@ -176,11 +202,20 @@ export function Canvas({ outputFormat, onNodesChange, onEdgesChange, provider }:
             onDragOver={onDragOver}
             onDrop={onDrop}
             className="bg-[#0d0d0d]"
-            connectionLineStyle={{ stroke: "#f38020", strokeWidth: 2, strokeDasharray: "6 3" }}
+            connectionLineStyle={{
+              stroke: "#f38020",
+              strokeWidth: 2,
+              strokeDasharray: "6 3",
+            }}
             defaultEdgeOptions={{
               animated: true,
               style: { stroke: "#f38020", strokeWidth: 2 },
-              markerEnd: { type: MarkerType.ArrowClosed, color: "#f38020", width: 16, height: 16 },
+              markerEnd: {
+                type: MarkerType.ArrowClosed,
+                color: "#f38020",
+                width: 16,
+                height: 16,
+              },
             }}
             fitView
             snapToGrid
@@ -195,21 +230,34 @@ export function Canvas({ outputFormat, onNodesChange, onEdgesChange, provider }:
               nodeColor="#f38020"
               maskColor="rgba(0, 0, 0, 0.8)"
             />
-            <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#1f1f1f" />
+            <Background
+              variant={BackgroundVariant.Dots}
+              gap={20}
+              size={1}
+              color="#1f1f1f"
+            />
           </ReactFlow>
 
           {/* Empty state hint */}
           {nodes.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center">
-                <div className="text-[#333] text-[14px] font-medium mb-1">Drag components from the left panel</div>
-                <div className="text-[#2a2a2a] text-[12px]">Connect them by dragging between the handles</div>
+                <div className="text-[#333] text-[14px] font-medium mb-1">
+                  Drag components from the left panel
+                </div>
+                <div className="text-[#2a2a2a] text-[12px]">
+                  Connect them by dragging between the handles
+                </div>
               </div>
             </div>
           )}
         </div>
 
-        <CodePreview nodes={nodes as CanvasNode[]} edges={edges} format={outputFormat} />
+        <CodePreview
+          nodes={nodes as CanvasNode[]}
+          edges={edges}
+          format={outputFormat}
+        />
       </div>
 
       {/* Config panel — slides in when a node is selected */}

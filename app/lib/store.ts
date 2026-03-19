@@ -1,4 +1,10 @@
-import type { CloudProvider, Organization, Project, CanvasNode, Edge } from "~/types";
+import type {
+  CanvasNode,
+  CloudProvider,
+  Edge,
+  Organization,
+  Project,
+} from "~/types";
 
 const STORAGE_KEY = "cloudforge_state";
 
@@ -69,14 +75,17 @@ export function deleteOrganization(orgId: string): void {
 
 // --- Projects ---
 
-export function getProject(orgId: string, projectId: string): Project | undefined {
+export function getProject(
+  orgId: string,
+  projectId: string,
+): Project | undefined {
   const org = getOrganization(orgId);
   return org?.projects.find((p) => p.id === projectId);
 }
 
 export function createProject(
   orgId: string,
-  name: string
+  name: string,
 ): Project | undefined {
   const state = loadState();
   const org = state.organizations.find((o) => o.id === orgId);
@@ -136,7 +145,11 @@ export function getCanvasState(projectId: string): CanvasState {
   return { ...DEFAULT_CANVAS_STATE };
 }
 
-export function updateCanvasProvider(projectId: string, provider: CloudProvider, region: string): void {
+export function updateCanvasProvider(
+  projectId: string,
+  provider: CloudProvider,
+  region: string,
+): void {
   const state = getCanvasState(projectId);
   state.provider = provider;
   state.region = region;
@@ -152,6 +165,10 @@ export function saveCanvasState(projectId: string, state: CanvasState): void {
 
 export function resetAll(): void {
   if (typeof window === "undefined") return;
-  const keys = Object.keys(localStorage).filter((k) => k.startsWith("cloudforge_"));
-  keys.forEach((k) => localStorage.removeItem(k));
+  const keys = Object.keys(localStorage).filter((k) =>
+    k.startsWith("cloudforge_"),
+  );
+  for (const k of keys) {
+    localStorage.removeItem(k);
+  }
 }

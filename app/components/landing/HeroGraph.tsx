@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
 import anime from "animejs";
+import { useEffect, useRef } from "react";
 
 // ─── Layout ───
 const W = 560;
@@ -12,19 +12,34 @@ const HANDLE_SIZE = 10; // outer diameter of handle circle
 
 // ─── Components matching the real editor ───
 const components = [
-  { id: "vpc",  label: "VPC",            category: "NETWORK",  iconType: "network" as const },
-  { id: "ec2",  label: "EC2 Instance",   category: "COMPUTE",  iconType: "server" as const },
-  { id: "r53",  label: "Route 53",       category: "DNS",      iconType: "globe" as const },
-  { id: "sg",   label: "Security Group", category: "SECURITY", iconType: "shield" as const },
+  {
+    id: "vpc",
+    label: "VPC",
+    category: "NETWORK",
+    iconType: "network" as const,
+  },
+  {
+    id: "ec2",
+    label: "EC2 Instance",
+    category: "COMPUTE",
+    iconType: "server" as const,
+  },
+  { id: "r53", label: "Route 53", category: "DNS", iconType: "globe" as const },
+  {
+    id: "sg",
+    label: "Security Group",
+    category: "SECURITY",
+    iconType: "shield" as const,
+  },
 ];
 
 // ─── Canvas positions ───
 const cx = SIDEBAR_W + (W - SIDEBAR_W) / 2;
 const positions = [
-  { x: cx - 40,  y: TITLE_H + 44 },   // VPC — top center
-  { x: cx + 30,  y: TITLE_H + 135 },   // EC2 — middle right
-  { x: cx - 120, y: TITLE_H + 270 },   // Route 53 — bottom left
-  { x: cx + 50,  y: TITLE_H + 260 },   // Security Group — bottom right
+  { x: cx - 40, y: TITLE_H + 44 }, // VPC — top center
+  { x: cx + 30, y: TITLE_H + 135 }, // EC2 — middle right
+  { x: cx - 120, y: TITLE_H + 270 }, // Route 53 — bottom left
+  { x: cx + 50, y: TITLE_H + 260 }, // Security Group — bottom right
 ];
 
 // ─── Connections: [from, to] ───
@@ -37,7 +52,13 @@ const connections: [number, number][] = [
 // ─── State ───
 interface AnimState {
   cursor: { x: number; y: number; opacity: number; pressing: boolean };
-  nodes: { x: number; y: number; opacity: number; scale: number; selected: boolean }[];
+  nodes: {
+    x: number;
+    y: number;
+    opacity: number;
+    scale: number;
+    selected: boolean;
+  }[];
   dragGhost: { x: number; y: number; opacity: number; idx: number };
   edges: { progress: number; src: number; tgt: number }[];
   connLine: { x1: number; y1: number; x2: number; y2: number; opacity: number };
@@ -68,7 +89,13 @@ export function HeroGraph() {
 
     const st: AnimState = {
       cursor: { x: 55, y: 140, opacity: 0, pressing: false },
-      nodes: positions.map(() => ({ x: 0, y: 0, opacity: 0, scale: 0, selected: false })),
+      nodes: positions.map(() => ({
+        x: 0,
+        y: 0,
+        opacity: 0,
+        scale: 0,
+        selected: false,
+      })),
       dragGhost: { x: 0, y: 0, opacity: 0, idx: 0 },
       edges: connections.map(([s, t]) => ({ progress: 0, src: s, tgt: t })),
       connLine: { x1: 0, y1: 0, x2: 0, y2: 0, opacity: 0 },
@@ -83,8 +110,14 @@ export function HeroGraph() {
       st.dragGhost.opacity = 0;
       st.sidebarHl = -1;
       st.connLine.opacity = 0;
-      for (const n of st.nodes) { n.opacity = 0; n.scale = 0; n.selected = false; }
-      for (const e of st.edges) { e.progress = 0; }
+      for (const n of st.nodes) {
+        n.opacity = 0;
+        n.scale = 0;
+        n.selected = false;
+      }
+      for (const e of st.edges) {
+        e.progress = 0;
+      }
 
       const tl = anime.timeline({ easing: "easeInOutCubic", autoplay: true });
 
@@ -101,9 +134,14 @@ export function HeroGraph() {
 
         // Move to sidebar
         tl.add({
-          targets: st.cursor, x: SIDEBAR_W / 2, y: sy,
-          duration: 550, easing: "easeInOutQuad",
-          begin: () => { st.sidebarHl = i; },
+          targets: st.cursor,
+          x: SIDEBAR_W / 2,
+          y: sy,
+          duration: 550,
+          easing: "easeInOutQuad",
+          begin: () => {
+            st.sidebarHl = i;
+          },
         });
 
         // Hover pause
@@ -111,7 +149,8 @@ export function HeroGraph() {
 
         // Grab
         tl.add({
-          targets: st.cursor, duration: 200,
+          targets: st.cursor,
+          duration: 200,
           begin: () => {
             st.cursor.pressing = true;
             st.dragGhost.idx = i;
@@ -124,13 +163,16 @@ export function HeroGraph() {
         // Drag to position
         tl.add({
           targets: [st.cursor, st.dragGhost],
-          x: pos.x + NODE_W / 2, y: pos.y + NODE_H / 2,
-          duration: 800, easing: "easeInOutCubic",
+          x: pos.x + NODE_W / 2,
+          y: pos.y + NODE_H / 2,
+          duration: 800,
+          easing: "easeInOutCubic",
         });
 
         // Drop
         tl.add({
-          targets: st.cursor, duration: 120,
+          targets: st.cursor,
+          duration: 120,
           begin: () => {
             st.cursor.pressing = false;
             st.dragGhost.opacity = 0;
@@ -142,7 +184,12 @@ export function HeroGraph() {
         });
 
         // Pop in
-        tl.add({ targets: st.nodes[i], scale: [0, 1], duration: 450, easing: "easeOutBack" });
+        tl.add({
+          targets: st.nodes[i],
+          scale: [0, 1],
+          duration: 450,
+          easing: "easeOutBack",
+        });
 
         // Pause between drops
         if (i < 3) tl.add({ targets: st.cursor, duration: 350 });
@@ -166,9 +213,14 @@ export function HeroGraph() {
 
         // Cursor to source handle
         tl.add({
-          targets: st.cursor, x: sx, y: sy,
-          duration: 500, easing: "easeInOutQuad",
-          begin: () => { st.nodes[si].selected = true; },
+          targets: st.cursor,
+          x: sx,
+          y: sy,
+          duration: 500,
+          easing: "easeInOutQuad",
+          begin: () => {
+            st.nodes[si].selected = true;
+          },
         });
 
         // Hover on handle
@@ -176,26 +228,38 @@ export function HeroGraph() {
 
         // Press
         tl.add({
-          targets: st.cursor, duration: 180,
+          targets: st.cursor,
+          duration: 180,
           begin: () => {
             st.cursor.pressing = true;
-            st.connLine.x1 = sx; st.connLine.y1 = sy;
-            st.connLine.x2 = sx; st.connLine.y2 = sy;
+            st.connLine.x1 = sx;
+            st.connLine.y1 = sy;
+            st.connLine.x2 = sx;
+            st.connLine.y2 = sy;
             st.connLine.opacity = 1;
           },
         });
 
         // Drag to target handle
         tl.add({
-          targets: st.cursor, x: tx, y: ty,
-          duration: 700, easing: "easeInOutCubic",
-          update: () => { st.connLine.x2 = st.cursor.x; st.connLine.y2 = st.cursor.y; },
-          begin: () => { st.nodes[ti].selected = true; },
+          targets: st.cursor,
+          x: tx,
+          y: ty,
+          duration: 700,
+          easing: "easeInOutCubic",
+          update: () => {
+            st.connLine.x2 = st.cursor.x;
+            st.connLine.y2 = st.cursor.y;
+          },
+          begin: () => {
+            st.nodes[ti].selected = true;
+          },
         });
 
         // Release
         tl.add({
-          targets: st.cursor, duration: 120,
+          targets: st.cursor,
+          duration: 120,
           begin: () => {
             st.cursor.pressing = false;
             st.connLine.opacity = 0;
@@ -205,17 +269,31 @@ export function HeroGraph() {
         });
 
         // Edge draw
-        tl.add({ targets: st.edges[ci], progress: [0, 1], duration: 500, easing: "easeOutCubic" });
+        tl.add({
+          targets: st.edges[ci],
+          progress: [0, 1],
+          duration: 500,
+          easing: "easeOutCubic",
+        });
 
         // Pause between connections
-        if (ci < connections.length - 1) tl.add({ targets: st.cursor, duration: 350 });
+        if (ci < connections.length - 1)
+          tl.add({ targets: st.cursor, duration: 350 });
       }
 
       // Hold and fade
-      tl.add({ targets: st.cursor, opacity: [1, 0], duration: 700, delay: 2500 });
       tl.add({
-        targets: st.cursor, duration: 1800,
-        complete: () => { tlRef.current = buildTL(); },
+        targets: st.cursor,
+        opacity: [1, 0],
+        duration: 700,
+        delay: 2500,
+      });
+      tl.add({
+        targets: st.cursor,
+        duration: 1800,
+        complete: () => {
+          tlRef.current = buildTL();
+        },
       });
 
       return tl;
@@ -249,7 +327,11 @@ export function HeroGraph() {
 
   return (
     <div className="hero-graph relative w-full max-w-[560px] rounded-2xl border border-[#1c1c1c] bg-[#0a0a0a] overflow-hidden shadow-[0_50px_140px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.02)_inset]">
-      <canvas ref={canvasRef} className="w-full relative z-[1]" style={{ aspectRatio: `${W}/${H}` }} />
+      <canvas
+        ref={canvasRef}
+        className="w-full relative z-[1]"
+        style={{ aspectRatio: `${W}/${H}` }}
+      />
     </div>
   );
 }
@@ -269,7 +351,11 @@ function drawChrome(ctx: CanvasRenderingContext2D) {
   ctx.stroke();
 
   // Traffic dots
-  [["#ff5f57", 0.55], ["#febc2e", 0.55], ["#28c840", 0.55]].forEach(([c, a], i) => {
+  [
+    ["#ff5f57", 0.55],
+    ["#febc2e", 0.55],
+    ["#28c840", 0.55],
+  ].forEach(([c, a], i) => {
     ctx.beginPath();
     ctx.arc(18 + i * 16, TITLE_H / 2, 4.5, 0, Math.PI * 2);
     ctx.fillStyle = c as string;
@@ -323,7 +409,8 @@ function drawSidebar(ctx: CanvasRenderingContext2D, s: AnimState) {
     }
 
     // Icon box — matches editor: rounded-lg bg-[#252525]
-    const bx = 16, by = y + 4;
+    const bx = 16,
+      by = y + 4;
     rr(ctx, bx, by, 24, 24, 6);
     ctx.fillStyle = hl ? "rgba(243,128,32,0.1)" : "#191919";
     ctx.fill();
@@ -409,10 +496,19 @@ function drawNodes(ctx: CanvasRenderingContext2D, s: AnimState) {
     rr(ctx, ibx, iby, 28, 28, 7);
     ctx.fillStyle = node.selected ? "rgba(243,128,32,0.12)" : "#222";
     ctx.fill();
-    ctx.strokeStyle = node.selected ? "rgba(243,128,32,0.2)" : "rgba(255,255,255,0.03)";
+    ctx.strokeStyle = node.selected
+      ? "rgba(243,128,32,0.2)"
+      : "rgba(255,255,255,0.03)";
     ctx.lineWidth = 0.5;
     ctx.stroke();
-    drawIcon(ctx, ibx + 14, iby + 14, comp.iconType, node.selected ? 1 : 0.75, 6);
+    drawIcon(
+      ctx,
+      ibx + 14,
+      iby + 14,
+      comp.iconType,
+      node.selected ? 1 : 0.75,
+      6,
+    );
 
     // ── Label: 13px font-medium text-[#e3e3e3] ──
     ctx.font = "500 11px 'Inter', sans-serif";
@@ -429,13 +525,23 @@ function drawNodes(ctx: CanvasRenderingContext2D, s: AnimState) {
 
     // ── Handles: circles with bg-[#1a1a1a] border-2 border-[#f38020] ──
     if (node.scale > 0.85) {
-      drawHandle(ctx, ncx, node.y - HANDLE_SIZE / 2 - 1, node.selected);           // top
-      drawHandle(ctx, ncx, node.y + NODE_H + HANDLE_SIZE / 2 + 1, node.selected);  // bottom
+      drawHandle(ctx, ncx, node.y - HANDLE_SIZE / 2 - 1, node.selected); // top
+      drawHandle(
+        ctx,
+        ncx,
+        node.y + NODE_H + HANDLE_SIZE / 2 + 1,
+        node.selected,
+      ); // bottom
     }
   });
 }
 
-function drawHandle(ctx: CanvasRenderingContext2D, x: number, y: number, active: boolean) {
+function drawHandle(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  active: boolean,
+) {
   const r = HANDLE_SIZE / 2;
 
   // Glow ring when active
@@ -503,8 +609,14 @@ function drawEdges(ctx: CanvasRenderingContext2D, s: AnimState) {
       const al = 5.5;
       ctx.beginPath();
       ctx.moveTo(x2p, y2);
-      ctx.lineTo(x2p - al * Math.cos(angle - 0.5), y2 - al * Math.sin(angle - 0.5));
-      ctx.lineTo(x2p - al * Math.cos(angle + 0.5), y2 - al * Math.sin(angle + 0.5));
+      ctx.lineTo(
+        x2p - al * Math.cos(angle - 0.5),
+        y2 - al * Math.sin(angle - 0.5),
+      );
+      ctx.lineTo(
+        x2p - al * Math.cos(angle + 0.5),
+        y2 - al * Math.sin(angle + 0.5),
+      );
       ctx.closePath();
       ctx.fillStyle = "rgba(243,128,32,0.55)";
       ctx.fill();
@@ -597,7 +709,8 @@ function drawGhost(ctx: CanvasRenderingContext2D, s: AnimState) {
   ctx.shadowBlur = 0;
 
   // Icon box
-  const ibx = gx + 12, iby = gy + (NODE_H - 28) / 2;
+  const ibx = gx + 12,
+    iby = gy + (NODE_H - 28) / 2;
   rr(ctx, ibx, iby, 28, 28, 7);
   ctx.fillStyle = "#222";
   ctx.fill();
@@ -660,7 +773,14 @@ function drawCursor(ctx: CanvasRenderingContext2D, s: AnimState) {
 // MINI ICONS (Lucide-like)
 // ════════════════════════════════
 
-function drawIcon(ctx: CanvasRenderingContext2D, cx: number, cy: number, type: string, alpha: number, sz: number) {
+function drawIcon(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  type: string,
+  alpha: number,
+  sz: number,
+) {
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.strokeStyle = "#f38020";
@@ -704,7 +824,8 @@ function drawIcon(ctx: CanvasRenderingContext2D, cx: number, cy: number, type: s
     }
     case "server": {
       // Server: two stacked rectangles
-      const w = sz, h = sz * 0.45;
+      const w = sz,
+        h = sz * 0.45;
       rr(ctx, cx - w, cy - h - 1, w * 2, h, 2);
       ctx.stroke();
       rr(ctx, cx - w, cy + 1, w * 2, h, 2);
@@ -734,7 +855,8 @@ function drawIcon(ctx: CanvasRenderingContext2D, cx: number, cy: number, type: s
     }
     case "shield": {
       // Shield
-      const w = sz * 0.8, h = sz * 1.2;
+      const w = sz * 0.8,
+        h = sz * 1.2;
       ctx.beginPath();
       ctx.moveTo(cx, cy - h);
       ctx.lineTo(cx + w, cy - h * 0.55);
@@ -784,7 +906,14 @@ function drawIcon(ctx: CanvasRenderingContext2D, cx: number, cy: number, type: s
 }
 
 // ─── Round rect ───
-function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+function rr(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + w - r, y);

@@ -8,6 +8,6 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 5173,
-    allowedHosts: ["chapters-prior-cult-kenneth.trycloudflare.com"],
+    allowedHosts: [".trycloudflare.com"],
   },
 });

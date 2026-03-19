@@ -1,14 +1,14 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Server,
-  Zap,
-  Network,
-  HardDrive,
+  CloudCog,
   Database,
-  Shield,
   GitBranch,
   Globe,
-  CloudCog,
+  HardDrive,
+  Network,
+  Server,
+  Shield,
+  Zap,
 } from "lucide-react";
 
 export const iconMap: Record<string, LucideIcon> = {

@@ -1,18 +1,34 @@
-import { useEffect, useRef, useCallback, useState } from "react";
-import { Link } from "react-router";
-import {
-  Cloud, ArrowRight, Zap, Shield, FileCode, GitBranch,
-  Boxes, MousePointerClick, Cable, Download,
-  Server, Database, Globe, Network, HardDrive,
-} from "lucide-react";
 import anime from "animejs";
+import {
+  ArrowRight,
+  Boxes,
+  Cable,
+  Cloud,
+  Database,
+  Download,
+  FileCode,
+  GitBranch,
+  Globe,
+  HardDrive,
+  MousePointerClick,
+  Network,
+  Server,
+  Shield,
+  Zap,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router";
 import { HeroGraph } from "~/components/landing/HeroGraph";
 import { isOnboarded } from "~/lib/store";
 
 export function meta() {
   return [
     { title: "CloudiFlow-9000 - Visual IaC Generator" },
-    { name: "description", content: "Build cloud infrastructure visually and generate Terraform, Pulumi, or Ansible code" },
+    {
+      name: "description",
+      content:
+        "Build cloud infrastructure visually and generate Terraform, Pulumi, or Ansible code",
+    },
   ];
 }
 
@@ -33,7 +49,15 @@ function ParticleField() {
     canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
 
-    const particles: { x: number; y: number; vx: number; vy: number; size: number; opacity: number; phase: number }[] = [];
+    const particles: {
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      size: number;
+      opacity: number;
+      phase: number;
+    }[] = [];
     for (let i = 0; i < 50; i++) {
       particles.push({
         x: Math.random() * width,
@@ -54,7 +78,10 @@ function ParticleField() {
       for (const p of particles) {
         p.x += p.vx + Math.sin(t + p.phase) * 0.08;
         p.y += p.vy;
-        if (p.y < -10) { p.y = height + 10; p.x = Math.random() * width; }
+        if (p.y < -10) {
+          p.y = height + 10;
+          p.x = Math.random() * width;
+        }
         if (p.x < -10) p.x = width + 10;
         if (p.x > width + 10) p.x = -10;
         ctx.fillStyle = `rgba(243, 128, 32, ${p.opacity})`;
@@ -76,10 +103,18 @@ function ParticleField() {
 
     window.addEventListener("resize", resize);
     draw();
-    return () => { cancelAnimationFrame(frame); window.removeEventListener("resize", resize); };
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", resize);
+    };
   }, []);
 
-  return <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-0" />;
+  return (
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 w-full h-full pointer-events-none z-0"
+    />
+  );
 }
 
 // --- Animated code block ---
@@ -159,7 +194,7 @@ const instance = new aws.ec2.Instance("web", {
         easing: "easeOutCubic",
       });
     }
-  }, [activeFormat]);
+  }, []);
 
   return (
     <div className="code-preview-block relative rounded-2xl border border-[#1a1a1a] bg-[#0c0c0c] overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.5)]">
@@ -167,6 +202,7 @@ const instance = new aws.ec2.Instance("web", {
       <div className="flex items-center gap-1 px-4 py-3 border-b border-[#1a1a1a] bg-[#0a0a0a]">
         {codeSnippets.map((s, i) => (
           <button
+            type="button"
             key={s.label}
             onClick={() => setActiveFormat(i)}
             className={`px-3 py-1 rounded-md text-[11px] font-medium transition-all duration-300 ${
@@ -231,7 +267,10 @@ function ProviderOrbs() {
         >
           <div
             className="w-2.5 h-2.5 rounded-full"
-            style={{ backgroundColor: p.color, boxShadow: `0 0 8px ${p.color}40` }}
+            style={{
+              backgroundColor: p.color,
+              boxShadow: `0 0 8px ${p.color}40`,
+            }}
           />
           <span className="text-[12px] font-medium text-[#999]">{p.name}</span>
         </div>
@@ -242,7 +281,10 @@ function ProviderOrbs() {
 
 // --- Main landing ---
 export default function Landing() {
-  const ctaLink = typeof window !== "undefined" && isOnboarded() ? "/dashboard" : "/onboarding";
+  const ctaLink =
+    typeof window !== "undefined" && isOnboarded()
+      ? "/dashboard"
+      : "/onboarding";
 
   const howItWorksRef = useRef<HTMLDivElement>(null);
   const codeShowcaseRef = useRef<HTMLDivElement>(null);
@@ -335,12 +377,14 @@ export default function Landing() {
           }
         }
       },
-      { threshold: 0.15 }
+      { threshold: 0.15 },
     );
 
-    [howItWorksRef, codeShowcaseRef, featuresRef, providersRef, ctaRef].forEach((ref) => {
-      if (ref.current) observer.observe(ref.current);
-    });
+    [howItWorksRef, codeShowcaseRef, featuresRef, providersRef, ctaRef].forEach(
+      (ref) => {
+        if (ref.current) observer.observe(ref.current);
+      },
+    );
 
     return observer;
   }, []);
@@ -356,62 +400,83 @@ export default function Landing() {
       duration: 600,
     });
 
-    tl.add({
-      targets: ".hero-badge",
-      opacity: [0, 1],
-      translateY: [15, 0],
-      scale: [0.9, 1],
-      duration: 500,
-    }, "-=200");
+    tl.add(
+      {
+        targets: ".hero-badge",
+        opacity: [0, 1],
+        translateY: [15, 0],
+        scale: [0.9, 1],
+        duration: 500,
+      },
+      "-=200",
+    );
 
-    tl.add({
-      targets: ".hero-word",
-      opacity: [0, 1],
-      translateY: [50, 0],
-      rotateX: [20, 0],
-      duration: 800,
-      delay: anime.stagger(70),
-    }, "-=200");
+    tl.add(
+      {
+        targets: ".hero-word",
+        opacity: [0, 1],
+        translateY: [50, 0],
+        rotateX: [20, 0],
+        duration: 800,
+        delay: anime.stagger(70),
+      },
+      "-=200",
+    );
 
-    tl.add({
-      targets: ".hero-accent",
-      opacity: [0, 1],
-      translateY: [30, 0],
-      duration: 700,
-    }, "-=400");
+    tl.add(
+      {
+        targets: ".hero-accent",
+        opacity: [0, 1],
+        translateY: [30, 0],
+        duration: 700,
+      },
+      "-=400",
+    );
 
-    tl.add({
-      targets: ".hero-desc",
-      opacity: [0, 1],
-      translateY: [20, 0],
-      duration: 600,
-    }, "-=300");
+    tl.add(
+      {
+        targets: ".hero-desc",
+        opacity: [0, 1],
+        translateY: [20, 0],
+        duration: 600,
+      },
+      "-=300",
+    );
 
-    tl.add({
-      targets: ".hero-cta-btn",
-      opacity: [0, 1],
-      translateY: [20, 0],
-      scale: [0.95, 1],
-      duration: 600,
-      delay: anime.stagger(100),
-    }, "-=200");
+    tl.add(
+      {
+        targets: ".hero-cta-btn",
+        opacity: [0, 1],
+        translateY: [20, 0],
+        scale: [0.95, 1],
+        duration: 600,
+        delay: anime.stagger(100),
+      },
+      "-=200",
+    );
 
-    tl.add({
-      targets: ".hero-graph",
-      opacity: [0, 1],
-      translateX: [60, 0],
-      scale: [0.95, 1],
-      duration: 900,
-      easing: "easeOutCubic",
-    }, "-=800");
+    tl.add(
+      {
+        targets: ".hero-graph",
+        opacity: [0, 1],
+        translateX: [60, 0],
+        scale: [0.95, 1],
+        duration: 900,
+        easing: "easeOutCubic",
+      },
+      "-=800",
+    );
 
-    tl.add({
-      targets: ".hero-stat",
-      opacity: [0, 1],
-      translateY: [20, 0],
-      duration: 500,
-      delay: anime.stagger(80),
-    }, "-=400");
+    tl.add(
+      {
+        targets: ".hero-stat",
+        opacity: [0, 1],
+        translateY: [20, 0],
+        duration: 500,
+        delay: anime.stagger(80),
+      },
+      "-=400",
+    );
 
     const observer = observeAndAnimate();
     return () => observer.disconnect();
@@ -431,11 +496,23 @@ export default function Landing() {
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#f38020] to-[#e06000] flex items-center justify-center shadow-[0_0_20px_rgba(243,128,32,0.2)]">
             <Cloud className="w-4 h-4 text-white" />
           </div>
-          <span className="text-[15px] font-semibold text-white tracking-tight">CloudiFlow-9000</span>
+          <span className="text-[15px] font-semibold text-white tracking-tight">
+            CloudiFlow-9000
+          </span>
         </div>
         <div className="flex items-center gap-6">
-          <a href="#how-it-works" className="text-[13px] text-[#666] hover:text-white transition-colors hidden sm:block">How it works</a>
-          <a href="#features" className="text-[13px] text-[#666] hover:text-white transition-colors hidden sm:block">Features</a>
+          <a
+            href="#how-it-works"
+            className="text-[13px] text-[#666] hover:text-white transition-colors hidden sm:block"
+          >
+            How it works
+          </a>
+          <a
+            href="#features"
+            className="text-[13px] text-[#666] hover:text-white transition-colors hidden sm:block"
+          >
+            Features
+          </a>
           <Link
             to={ctaLink}
             className="group px-5 py-2 bg-gradient-to-r from-[#f38020] to-[#e06000] hover:from-[#ff9030] hover:to-[#f07010] text-white rounded-lg text-[13px] font-medium transition-all duration-300 shadow-[0_0_20px_rgba(243,128,32,0.15)] hover:shadow-[0_0_30px_rgba(243,128,32,0.3)]"
@@ -454,15 +531,24 @@ export default function Landing() {
               {/* Badge */}
               <div className="hero-badge inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#1f1f1f] bg-[#111] mb-8 opacity-0">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#f38020] animate-pulse" />
-                <span className="text-[11px] text-[#888] font-medium tracking-wide">Open Source Visual IaC Builder</span>
+                <span className="text-[11px] text-[#888] font-medium tracking-wide">
+                  Open Source Visual IaC Builder
+                </span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.08] mb-4" style={{ perspective: "800px" }}>
-                <span className="hero-word inline-block opacity-0">Design </span>
+              <h1
+                className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.08] mb-4"
+                style={{ perspective: "800px" }}
+              >
+                <span className="hero-word inline-block opacity-0">
+                  Design{" "}
+                </span>
                 <span className="hero-word inline-block opacity-0">your </span>
                 <span className="hero-word inline-block opacity-0">cloud </span>
                 <br className="hidden md:block" />
-                <span className="hero-word inline-block opacity-0">infrastructure</span>
+                <span className="hero-word inline-block opacity-0">
+                  infrastructure
+                </span>
               </h1>
               <h1 className="hero-accent text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.08] mb-8 opacity-0">
                 <span className="bg-gradient-to-r from-[#f38020] via-[#ff9a44] to-[#f38020] bg-clip-text text-transparent bg-[length:200%_auto] animate-[gradient-shift_3s_ease-in-out_infinite]">
@@ -471,8 +557,8 @@ export default function Landing() {
               </h1>
 
               <p className="hero-desc text-[15px] sm:text-[16px] text-[#666] leading-relaxed max-w-md mb-10 opacity-0">
-                Drag cloud components onto a canvas. Connect them.
-                Export production-ready Terraform, Pulumi, or Ansible — instantly.
+                Drag cloud components onto a canvas. Connect them. Export
+                production-ready Terraform, Pulumi, or Ansible — instantly.
               </p>
 
               <div className="flex flex-wrap items-center gap-4 mb-12">
@@ -499,8 +585,12 @@ export default function Landing() {
                   { value: "100%", label: "Local" },
                 ].map((stat) => (
                   <div key={stat.label} className="hero-stat opacity-0">
-                    <div className="text-[18px] font-bold text-white">{stat.value}</div>
-                    <div className="text-[11px] text-[#555] uppercase tracking-wider">{stat.label}</div>
+                    <div className="text-[18px] font-bold text-white">
+                      {stat.value}
+                    </div>
+                    <div className="text-[11px] text-[#555] uppercase tracking-wider">
+                      {stat.label}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -520,8 +610,12 @@ export default function Landing() {
           className="relative max-w-5xl mx-auto px-8 py-24"
         >
           <div className="text-center mb-16">
-            <p className="text-[11px] text-[#f38020] uppercase tracking-[0.3em] font-medium mb-3">Workflow</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-white">Three steps. Zero boilerplate.</h2>
+            <p className="text-[11px] text-[#f38020] uppercase tracking-[0.3em] font-medium mb-3">
+              Workflow
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white">
+              Three steps. Zero boilerplate.
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
@@ -548,7 +642,7 @@ export default function Landing() {
                 title: "Export",
                 desc: "Hit copy or download. Get production-ready IaC code in Terraform, Pulumi, or Ansible — your choice.",
               },
-            ].map((item, i) => (
+            ].map((item, _i) => (
               <div
                 key={item.step}
                 className="step-card relative p-7 rounded-2xl border border-[#1a1a1a] bg-[#0d0d0d]/80 group hover:border-[#f38020]/20 transition-all duration-500 opacity-0"
@@ -562,7 +656,9 @@ export default function Landing() {
                   <div className="w-12 h-12 rounded-xl border border-[#1f1f1f] bg-[#111] flex items-center justify-center mb-5 text-[#f38020] group-hover:border-[#f38020]/30 group-hover:bg-[#f38020]/5 group-hover:shadow-[0_0_20px_rgba(243,128,32,0.08)] transition-all duration-500">
                     {item.icon}
                   </div>
-                  <h3 className="text-[16px] font-semibold text-white mb-2">{item.title}</h3>
+                  <h3 className="text-[16px] font-semibold text-white mb-2">
+                    {item.title}
+                  </h3>
                   <p className="text-[13px] text-[#555] leading-relaxed group-hover:text-[#777] transition-colors duration-300">
                     {item.desc}
                   </p>
@@ -584,19 +680,34 @@ export default function Landing() {
                 Output
               </p>
               <h2 className="code-showcase-text text-3xl sm:text-4xl font-bold text-white mb-6 opacity-0">
-                One design,<br />three formats.
+                One design,
+                <br />
+                three formats.
               </h2>
               <p className="code-showcase-text text-[15px] text-[#666] leading-relaxed mb-8 opacity-0">
-                Your visual architecture exports to Terraform HCL, Pulumi TypeScript, or Ansible YAML.
-                Switch between them with a single click — no rework.
+                Your visual architecture exports to Terraform HCL, Pulumi
+                TypeScript, or Ansible YAML. Switch between them with a single
+                click — no rework.
               </p>
               <div className="code-showcase-text flex flex-wrap gap-3 opacity-0">
                 {[
-                  { icon: <FileCode className="w-3.5 h-3.5" />, label: "Terraform HCL" },
-                  { icon: <GitBranch className="w-3.5 h-3.5" />, label: "Pulumi TS" },
-                  { icon: <Boxes className="w-3.5 h-3.5" />, label: "Ansible YAML" },
+                  {
+                    icon: <FileCode className="w-3.5 h-3.5" />,
+                    label: "Terraform HCL",
+                  },
+                  {
+                    icon: <GitBranch className="w-3.5 h-3.5" />,
+                    label: "Pulumi TS",
+                  },
+                  {
+                    icon: <Boxes className="w-3.5 h-3.5" />,
+                    label: "Ansible YAML",
+                  },
                 ].map((f) => (
-                  <div key={f.label} className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-[#1f1f1f] bg-[#111] text-[12px] text-[#888] font-medium">
+                  <div
+                    key={f.label}
+                    className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-[#1f1f1f] bg-[#111] text-[12px] text-[#888] font-medium"
+                  >
                     <span className="text-[#f38020]">{f.icon}</span>
                     {f.label}
                   </div>
@@ -618,8 +729,12 @@ export default function Landing() {
           className="relative max-w-5xl mx-auto px-8 py-24"
         >
           <div className="text-center mb-16">
-            <p className="text-[11px] text-[#f38020] uppercase tracking-[0.3em] font-medium mb-3">Features</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-white">Everything you need to ship infra.</h2>
+            <p className="text-[11px] text-[#f38020] uppercase tracking-[0.3em] font-medium mb-3">
+              Features
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white">
+              Everything you need to ship infra.
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -654,9 +769,9 @@ export default function Landing() {
                 title: "Component Library",
                 desc: "EC2, Lambda, VPC, RDS, S3, Load Balancers, Security Groups, Route53, and more.",
               },
-            ].map((feature, i) => (
+            ].map((feature) => (
               <div
-                key={i}
+                key={feature.title}
                 className="feature-card group relative p-6 rounded-xl border border-[#1a1a1a] bg-[#0d0d0d]/50 hover:border-[#f38020]/20 transition-all duration-500 hover:bg-[#111]/80 opacity-0"
               >
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[rgba(243,128,32,0.02)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -664,7 +779,9 @@ export default function Landing() {
                   <div className="w-10 h-10 rounded-lg border border-[#1f1f1f] bg-[#111] flex items-center justify-center mb-4 text-[#f38020] group-hover:border-[#f38020]/30 group-hover:shadow-[0_0_15px_rgba(243,128,32,0.08)] transition-all duration-500">
                     {feature.icon}
                   </div>
-                  <h3 className="text-[14px] font-semibold text-white mb-1.5">{feature.title}</h3>
+                  <h3 className="text-[14px] font-semibold text-white mb-1.5">
+                    {feature.title}
+                  </h3>
                   <p className="text-[13px] text-[#555] leading-relaxed group-hover:text-[#777] transition-colors duration-300">
                     {feature.desc}
                   </p>
@@ -694,7 +811,9 @@ export default function Landing() {
                   <div className="w-11 h-11 rounded-xl border border-[#1f1f1f] bg-[#111] flex items-center justify-center text-[#f38020]">
                     {c.icon}
                   </div>
-                  <span className="text-[10px] text-[#555] uppercase tracking-wider font-medium">{c.label}</span>
+                  <span className="text-[10px] text-[#555] uppercase tracking-wider font-medium">
+                    {c.label}
+                  </span>
                 </div>
               ))}
             </div>
@@ -702,8 +821,9 @@ export default function Landing() {
               Full component library across all major clouds.
             </h3>
             <p className="text-[14px] text-[#666] max-w-lg mx-auto mb-8">
-              Every resource type you need — from compute instances and databases to networking and security groups.
-              Each with configurable properties.
+              Every resource type you need — from compute instances and
+              databases to networking and security groups. Each with
+              configurable properties.
             </p>
             <div className="flex justify-center">
               <ProviderOrbs />
@@ -725,8 +845,8 @@ export default function Landing() {
               Ready to build?
             </h2>
             <p className="text-[15px] text-[#666] max-w-md mx-auto mb-8">
-              Go from blank canvas to deployable infrastructure in minutes.
-              No sign-up, no API keys, no cloud credentials needed.
+              Go from blank canvas to deployable infrastructure in minutes. No
+              sign-up, no API keys, no cloud credentials needed.
             </p>
             <Link
               to={ctaLink}

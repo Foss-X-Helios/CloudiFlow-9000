@@ -1,15 +1,27 @@
+import { ArrowLeft, Building2, Cloud, FolderGit2, Play } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router";
-import { Cloud, Play, ArrowLeft, Building2, FolderGit2 } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router";
 import { Canvas } from "~/components/canvas/Canvas";
-import { getOrganization, getProject, getCanvasState, updateCanvasProvider } from "~/lib/store";
-import type { CloudProvider, CanvasNode, Edge, Organization, Project } from "~/types";
+import {
+  getCanvasState,
+  getOrganization,
+  getProject,
+  updateCanvasProvider,
+} from "~/lib/store";
+import type {
+  CanvasNode,
+  CloudProvider,
+  Edge,
+  Organization,
+  Project,
+} from "~/types";
 
-const providers: { id: CloudProvider; label: string; defaultRegion: string }[] = [
-  { id: "aws", label: "AWS", defaultRegion: "us-east-1" },
-  { id: "gcp", label: "GCP", defaultRegion: "us-central1" },
-  { id: "azure", label: "Azure", defaultRegion: "eastus" },
-];
+const providers: { id: CloudProvider; label: string; defaultRegion: string }[] =
+  [
+    { id: "aws", label: "AWS", defaultRegion: "us-east-1" },
+    { id: "gcp", label: "GCP", defaultRegion: "us-central1" },
+    { id: "azure", label: "Azure", defaultRegion: "eastus" },
+  ];
 
 export function meta() {
   return [{ title: "Editor - CloudiFlow-9000" }];
@@ -18,9 +30,11 @@ export function meta() {
 export default function Editor() {
   const params = useParams<{ orgId: string; projectId: string }>();
   const navigate = useNavigate();
-  const [outputFormat, setOutputFormat] = useState<"terraform" | "pulumi" | "ansible">("terraform");
-  const [nodes, setNodes] = useState<CanvasNode[]>([]);
-  const [edges, setEdges] = useState<Edge[]>([]);
+  const [outputFormat, setOutputFormat] = useState<
+    "terraform" | "pulumi" | "ansible"
+  >("terraform");
+  const [_nodes, setNodes] = useState<CanvasNode[]>([]);
+  const [_edges, setEdges] = useState<Edge[]>([]);
   const [org, setOrg] = useState<Organization | null>(null);
   const [project, setProject] = useState<Project | null>(null);
   const [provider, setProvider] = useState<CloudProvider>("aws");
@@ -31,7 +45,9 @@ export default function Editor() {
       return;
     }
     const foundOrg = getOrganization(params.orgId);
-    const foundProject = foundOrg ? getProject(params.orgId, params.projectId) : undefined;
+    const foundProject = foundOrg
+      ? getProject(params.orgId, params.projectId)
+      : undefined;
 
     if (!foundOrg || !foundProject) {
       navigate("/dashboard", { replace: true });
@@ -48,9 +64,11 @@ export default function Editor() {
 
   const handleProviderChange = (newProvider: CloudProvider) => {
     setProvider(newProvider);
-    const defaultRegion = providers.find((p) => p.id === newProvider)!.defaultRegion;
+    const defaultRegion = providers.find(
+      (p) => p.id === newProvider,
+    )?.defaultRegion;
     if (params.projectId) {
-      updateCanvasProvider(params.projectId, newProvider, defaultRegion);
+      updateCanvasProvider(params.projectId, newProvider, defaultRegion ?? "");
     }
   };
 
@@ -73,7 +91,9 @@ export default function Editor() {
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#f38020] to-[#e06000] flex items-center justify-center">
               <Cloud className="w-3.5 h-3.5 text-white" />
             </div>
-            <span className="text-[14px] font-semibold text-white">CloudiFlow-9000</span>
+            <span className="text-[14px] font-semibold text-white">
+              CloudiFlow-9000
+            </span>
           </div>
 
           <div className="h-5 w-px bg-[#222]" />
@@ -99,6 +119,7 @@ export default function Editor() {
           <div className="flex items-center gap-1 bg-[#111] rounded-full p-1 border border-[#1a1a1a]">
             {providers.map((p) => (
               <button
+                type="button"
                 key={p.id}
                 onClick={() => handleProviderChange(p.id)}
                 className={`px-3 py-1 rounded-full text-[12px] font-medium transition-all duration-200 ${
@@ -116,6 +137,7 @@ export default function Editor() {
           <div className="flex items-center gap-1 bg-[#111] rounded-full p-1 border border-[#1a1a1a]">
             {(["terraform", "pulumi", "ansible"] as const).map((format) => (
               <button
+                type="button"
                 key={format}
                 onClick={() => setOutputFormat(format)}
                 className={`px-3 py-1 rounded-full text-[12px] font-medium transition-all duration-200 ${
@@ -129,7 +151,10 @@ export default function Editor() {
             ))}
           </div>
 
-          <button className="px-4 py-1.5 bg-gradient-to-r from-[#f38020] to-[#e06000] hover:from-[#ff9030] hover:to-[#f07010] text-white rounded-lg text-[12px] font-medium transition-all duration-200 flex items-center gap-1.5 shadow-[0_0_15px_rgba(243,128,32,0.15)]">
+          <button
+            type="button"
+            className="px-4 py-1.5 bg-gradient-to-r from-[#f38020] to-[#e06000] hover:from-[#ff9030] hover:to-[#f07010] text-white rounded-lg text-[12px] font-medium transition-all duration-200 flex items-center gap-1.5 shadow-[0_0_15px_rgba(243,128,32,0.15)]"
+          >
             <Play className="w-3 h-3" />
             Deploy
           </button>

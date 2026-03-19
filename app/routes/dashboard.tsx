@@ -1,13 +1,23 @@
-import { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router";
-import {
-  Cloud, Plus, Building2, FolderGit2, ArrowRight,
-  Trash2, X, AlertTriangle,
-} from "lucide-react";
 import anime from "animejs";
 import {
-  getOrganizations, createOrganization, createProject,
-  deleteOrganization, deleteProject, isOnboarded,
+  AlertTriangle,
+  ArrowRight,
+  Building2,
+  Cloud,
+  FolderGit2,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router";
+import {
+  createOrganization,
+  createProject,
+  deleteOrganization,
+  deleteProject,
+  getOrganizations,
+  isOnboarded,
 } from "~/lib/store";
 import type { Organization } from "~/types";
 
@@ -19,8 +29,18 @@ type ModalState =
   | { type: "none" }
   | { type: "new-org" }
   | { type: "new-project"; orgId: string }
-  | { type: "confirm-delete-org"; orgId: string; orgName: string; projectCount: number }
-  | { type: "confirm-delete-project"; orgId: string; projectId: string; projectName: string };
+  | {
+      type: "confirm-delete-org";
+      orgId: string;
+      orgName: string;
+      projectCount: number;
+    }
+  | {
+      type: "confirm-delete-project";
+      orgId: string;
+      projectId: string;
+      projectName: string;
+    };
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -30,7 +50,7 @@ export default function Dashboard() {
   const [projectName, setProjectName] = useState("");
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const refresh = () => setOrgs(getOrganizations());
+  const refresh = useCallback(() => setOrgs(getOrganizations()), []);
 
   useEffect(() => {
     if (!isOnboarded()) {
@@ -38,7 +58,7 @@ export default function Dashboard() {
       return;
     }
     refresh();
-  }, [navigate]);
+  }, [navigate, refresh]);
 
   useEffect(() => {
     if (contentRef.current) {
@@ -51,7 +71,7 @@ export default function Dashboard() {
         easing: "easeOutCubic",
       });
     }
-  }, [orgs]);
+  }, []);
 
   const handleCreateOrg = () => {
     if (!orgName.trim()) return;
@@ -86,7 +106,11 @@ export default function Dashboard() {
     refresh();
   };
 
-  const confirmDeleteProject = (orgId: string, projectId: string, projectName: string) => {
+  const confirmDeleteProject = (
+    orgId: string,
+    projectId: string,
+    projectName: string,
+  ) => {
     setModal({ type: "confirm-delete-project", orgId, projectId, projectName });
   };
 
@@ -104,9 +128,12 @@ export default function Dashboard() {
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#f38020] to-[#e06000] flex items-center justify-center shadow-[0_0_15px_rgba(243,128,32,0.15)]">
             <Cloud className="w-4 h-4 text-white" />
           </div>
-          <span className="text-[15px] font-semibold text-white tracking-tight">CloudiFlow-9000</span>
+          <span className="text-[15px] font-semibold text-white tracking-tight">
+            CloudiFlow-9000
+          </span>
         </div>
         <button
+          type="button"
           onClick={() => setModal({ type: "new-org" })}
           className="inline-flex items-center gap-2 px-4 py-2 bg-[#111] border border-[#222] hover:border-[#f38020]/30 rounded-lg text-[13px] text-[#ccc] hover:text-white transition-all duration-200"
         >
@@ -133,14 +160,18 @@ export default function Dashboard() {
                       <Building2 className="w-4 h-4 text-[#f38020]" />
                     </div>
                     <div>
-                      <h2 className="text-[16px] font-semibold text-white">{org.name}</h2>
+                      <h2 className="text-[16px] font-semibold text-white">
+                        {org.name}
+                      </h2>
                       <p className="text-[12px] text-[#555]">
-                        {org.projects.length} project{org.projects.length !== 1 ? "s" : ""}
+                        {org.projects.length} project
+                        {org.projects.length !== 1 ? "s" : ""}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
+                      type="button"
                       onClick={() => {
                         setModal({ type: "new-project", orgId: org.id });
                       }}
@@ -150,6 +181,7 @@ export default function Dashboard() {
                       New Project
                     </button>
                     <button
+                      type="button"
                       onClick={() => confirmDeleteOrg(org)}
                       className="p-1.5 text-[#333] hover:text-red-500 transition-colors"
                       title="Delete organization"
@@ -179,19 +211,27 @@ export default function Dashboard() {
                             <div className="w-8 h-8 rounded-lg bg-[#151515] flex items-center justify-center">
                               <FolderGit2 className="w-3.5 h-3.5 text-[#f38020]" />
                             </div>
-                            <h3 className="text-[14px] font-medium text-white">{project.name}</h3>
+                            <h3 className="text-[14px] font-medium text-white">
+                              {project.name}
+                            </h3>
                           </div>
                           <div className="text-[12px] text-[#555]">
-                            Created {new Date(project.createdAt).toLocaleDateString()}
+                            Created{" "}
+                            {new Date(project.createdAt).toLocaleDateString()}
                           </div>
                           <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                             <ArrowRight className="w-4 h-4 text-[#666]" />
                           </div>
                         </Link>
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            confirmDeleteProject(org.id, project.id, project.name);
+                            confirmDeleteProject(
+                              org.id,
+                              project.id,
+                              project.name,
+                            );
                           }}
                           className="absolute bottom-4 right-4 p-1 text-[#333] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
                           title="Delete project"
@@ -211,34 +251,53 @@ export default function Dashboard() {
       {/* Modal overlay */}
       {modal.type !== "none" && (
         <div
+          role="dialog"
+          aria-modal="true"
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={() => setModal({ type: "none" })}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setModal({ type: "none" });
+          }}
         >
           <div
+            role="document"
             className="w-full max-w-md bg-[#111] border border-[#222] rounded-2xl p-6"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
           >
             {modal.type === "new-org" && (
               <>
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-[16px] font-semibold text-white">New Organization</h3>
-                  <button onClick={() => setModal({ type: "none" })} className="text-[#666] hover:text-white">
+                  <h3 className="text-[16px] font-semibold text-white">
+                    New Organization
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setModal({ type: "none" })}
+                    className="text-[#666] hover:text-white"
+                  >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
                 <div className="mb-6">
-                  <label className="block text-[12px] font-medium text-[#999] uppercase tracking-wider mb-2">Name</label>
+                  <label
+                    htmlFor="modal-org-name"
+                    className="block text-[12px] font-medium text-[#999] uppercase tracking-wider mb-2"
+                  >
+                    Name
+                  </label>
                   <input
+                    id="modal-org-name"
                     type="text"
                     value={orgName}
                     onChange={(e) => setOrgName(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleCreateOrg()}
                     placeholder="Organization name"
-                    autoFocus
                     className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#222] rounded-xl text-[14px] text-white placeholder-[#444] focus:outline-none focus:border-[#f38020] transition-colors"
                   />
                 </div>
                 <button
+                  type="button"
                   onClick={handleCreateOrg}
                   disabled={!orgName.trim()}
                   className="w-full py-3 bg-gradient-to-r from-[#f38020] to-[#e06000] text-white rounded-xl text-[14px] font-medium disabled:opacity-40 transition-all"
@@ -251,24 +310,38 @@ export default function Dashboard() {
             {modal.type === "new-project" && (
               <>
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-[16px] font-semibold text-white">New Project</h3>
-                  <button onClick={() => setModal({ type: "none" })} className="text-[#666] hover:text-white">
+                  <h3 className="text-[16px] font-semibold text-white">
+                    New Project
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setModal({ type: "none" })}
+                    className="text-[#666] hover:text-white"
+                  >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
                 <div className="mb-6">
-                  <label className="block text-[12px] font-medium text-[#999] uppercase tracking-wider mb-2">Project name</label>
+                  <label
+                    htmlFor="modal-project-name"
+                    className="block text-[12px] font-medium text-[#999] uppercase tracking-wider mb-2"
+                  >
+                    Project name
+                  </label>
                   <input
+                    id="modal-project-name"
                     type="text"
                     value={projectName}
                     onChange={(e) => setProjectName(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleCreateProject(modal.orgId)}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && handleCreateProject(modal.orgId)
+                    }
                     placeholder="e.g. Core Network"
-                    autoFocus
                     className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#222] rounded-xl text-[14px] text-white placeholder-[#444] focus:outline-none focus:border-[#f38020] transition-colors"
                   />
                 </div>
                 <button
+                  type="button"
                   onClick={() => handleCreateProject(modal.orgId)}
                   disabled={!projectName.trim()}
                   className="w-full py-3 bg-gradient-to-r from-[#f38020] to-[#e06000] text-white rounded-xl text-[14px] font-medium disabled:opacity-40 transition-all"
@@ -285,29 +358,43 @@ export default function Dashboard() {
                     <div className="w-9 h-9 rounded-lg bg-red-500/10 flex items-center justify-center">
                       <AlertTriangle className="w-4.5 h-4.5 text-red-500" />
                     </div>
-                    <h3 className="text-[16px] font-semibold text-white">Delete Organization</h3>
+                    <h3 className="text-[16px] font-semibold text-white">
+                      Delete Organization
+                    </h3>
                   </div>
-                  <button onClick={() => setModal({ type: "none" })} className="text-[#666] hover:text-white">
+                  <button
+                    type="button"
+                    onClick={() => setModal({ type: "none" })}
+                    className="text-[#666] hover:text-white"
+                  >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
                 <p className="text-[14px] text-[#888] mb-2">
-                  Are you sure you want to delete <span className="text-white font-medium">{modal.orgName}</span>?
+                  Are you sure you want to delete{" "}
+                  <span className="text-white font-medium">
+                    {modal.orgName}
+                  </span>
+                  ?
                 </p>
                 {modal.projectCount > 0 && (
                   <p className="text-[13px] text-red-400/80 mb-5">
-                    This will permanently delete {modal.projectCount} project{modal.projectCount !== 1 ? "s" : ""} and all their canvas data.
+                    This will permanently delete {modal.projectCount} project
+                    {modal.projectCount !== 1 ? "s" : ""} and all their canvas
+                    data.
                   </p>
                 )}
                 {modal.projectCount === 0 && <div className="mb-5" />}
                 <div className="flex gap-3">
                   <button
+                    type="button"
                     onClick={() => setModal({ type: "none" })}
                     className="flex-1 py-2.5 bg-[#1a1a1a] border border-[#222] text-[#ccc] rounded-xl text-[13px] font-medium hover:bg-[#222] transition-colors"
                   >
                     Cancel
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleDeleteOrg(modal.orgId)}
                     className="flex-1 py-2.5 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-[13px] font-medium hover:bg-red-500/20 transition-colors"
                   >
@@ -324,24 +411,38 @@ export default function Dashboard() {
                     <div className="w-9 h-9 rounded-lg bg-red-500/10 flex items-center justify-center">
                       <AlertTriangle className="w-4.5 h-4.5 text-red-500" />
                     </div>
-                    <h3 className="text-[16px] font-semibold text-white">Delete Project</h3>
+                    <h3 className="text-[16px] font-semibold text-white">
+                      Delete Project
+                    </h3>
                   </div>
-                  <button onClick={() => setModal({ type: "none" })} className="text-[#666] hover:text-white">
+                  <button
+                    type="button"
+                    onClick={() => setModal({ type: "none" })}
+                    className="text-[#666] hover:text-white"
+                  >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
                 <p className="text-[14px] text-[#888] mb-5">
-                  Are you sure you want to delete <span className="text-white font-medium">{modal.projectName}</span>? This will remove all canvas data for this project.
+                  Are you sure you want to delete{" "}
+                  <span className="text-white font-medium">
+                    {modal.projectName}
+                  </span>
+                  ? This will remove all canvas data for this project.
                 </p>
                 <div className="flex gap-3">
                   <button
+                    type="button"
                     onClick={() => setModal({ type: "none" })}
                     className="flex-1 py-2.5 bg-[#1a1a1a] border border-[#222] text-[#ccc] rounded-xl text-[13px] font-medium hover:bg-[#222] transition-colors"
                   >
                     Cancel
                   </button>
                   <button
-                    onClick={() => handleDeleteProject(modal.orgId, modal.projectId)}
+                    type="button"
+                    onClick={() =>
+                      handleDeleteProject(modal.orgId, modal.projectId)
+                    }
                     className="flex-1 py-2.5 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-[13px] font-medium hover:bg-red-500/20 transition-colors"
                   >
                     Delete

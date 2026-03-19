@@ -1,6 +1,6 @@
-import { memo } from "react";
-import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { Handle, type NodeProps, Position } from "@xyflow/react";
 import { Server } from "lucide-react";
+import { memo } from "react";
 import { iconMap } from "~/lib/icons";
 import type { CanvasNode } from "~/types";
 
@@ -24,14 +24,20 @@ function CloudNodeComponent({ data, selected }: NodeProps<CanvasNode>) {
       />
 
       <div className="flex items-center gap-3">
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-          selected ? "bg-[#f38020]/15" : "bg-[#252525]"
-        }`}>
+        <div
+          className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+            selected ? "bg-[#f38020]/15" : "bg-[#252525]"
+          }`}
+        >
           <IconComponent className="w-4 h-4 text-[#f38020]" />
         </div>
         <div className="min-w-0">
-          <div className="text-[13px] font-medium text-[#e3e3e3] truncate">{label}</div>
-          <div className="text-[10px] text-[#666] uppercase tracking-wide">{component.category}</div>
+          <div className="text-[13px] font-medium text-[#e3e3e3] truncate">
+            {label}
+          </div>
+          <div className="text-[10px] text-[#666] uppercase tracking-wide">
+            {component.category}
+          </div>
         </div>
       </div>
 

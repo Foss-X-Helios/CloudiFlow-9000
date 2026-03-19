@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
 import { Copy, Download, FileCode } from "lucide-react";
-import type { CanvasNode, Edge } from "~/types";
+import { useMemo, useState } from "react";
 import { generateCode } from "~/lib/iac-generator";
+import type { CanvasNode, Edge } from "~/types";
 
 interface CodePreviewProps {
   nodes: CanvasNode[];
@@ -43,7 +43,9 @@ export function CodePreview({ nodes, edges, format }: CodePreviewProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileCode className="w-4 h-4 text-[#666666]" />
-            <h2 className="text-[13px] font-medium text-[#e3e3e3]">Generated Code</h2>
+            <h2 className="text-[13px] font-medium text-[#e3e3e3]">
+              Generated Code
+            </h2>
           </div>
           <span className="text-[10px] font-medium px-2 py-1 bg-[#252525] rounded text-[#f38020] uppercase">
             {format}
@@ -62,6 +64,7 @@ export function CodePreview({ nodes, edges, format }: CodePreviewProps) {
           {nodes.length > 0 ? (
             <>
               <button
+                type="button"
                 onClick={handleCopy}
                 className="w-full px-4 py-2 bg-[#f38020] hover:bg-[#e07010] text-white rounded text-[13px] font-medium transition-colors flex items-center justify-center gap-2"
               >
@@ -69,6 +72,7 @@ export function CodePreview({ nodes, edges, format }: CodePreviewProps) {
                 {copied ? "Copied!" : "Copy to Clipboard"}
               </button>
               <button
+                type="button"
                 onClick={handleDownload}
                 className="w-full px-4 py-2 bg-[#252525] hover:bg-[#333333] text-[#e3e3e3] rounded text-[13px] font-medium transition-colors flex items-center justify-center gap-2"
               >
