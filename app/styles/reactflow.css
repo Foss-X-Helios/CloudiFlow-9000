@@ -1,0 +1,16 @@
+/* Additional React Flow dark theme overrides */
+.react-flow__edge-path {
+  stroke: #f38020 !important;
+  stroke-width: 2px;
+}
+
+.react-flow__edge.animated .react-flow__edge-path {
+  stroke-dasharray: 5;
+  animation: dash 0.5s linear infinite;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
