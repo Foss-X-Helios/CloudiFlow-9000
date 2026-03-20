@@ -3,6 +3,75 @@ import type { IconName } from "./icons";
 
 export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
   aws: [
+    // Infrastructure (containers)
+    {
+      id: "aws-region",
+      name: "AWS Region",
+      icon: "Globe" satisfies IconName,
+      category: "infrastructure",
+      provider: "aws",
+      description: "AWS Region container",
+      useCase:
+        "An AWS Region represents a physical location where AWS data centers are clustered. Place your infrastructure inside a region to define where it runs geographically.",
+      connectsTo: ["aws-az"],
+      fields: [
+        {
+          name: "regionName",
+          label: "Region",
+          type: "select",
+          default: "us-east-1",
+          options: [
+            "us-east-1",
+            "us-east-2",
+            "us-west-1",
+            "us-west-2",
+            "eu-west-1",
+            "eu-west-2",
+            "eu-central-1",
+            "ap-south-1",
+            "ap-southeast-1",
+            "ap-northeast-1",
+          ],
+        },
+      ],
+      outputs: ["Region"],
+      isContainer: true,
+      containerLevel: 1,
+    },
+    {
+      id: "aws-az",
+      name: "Availability Zone",
+      icon: "Layers" satisfies IconName,
+      category: "infrastructure",
+      provider: "aws",
+      description: "AWS Availability Zone container",
+      useCase:
+        "An Availability Zone is an isolated data center within a region. Spread resources across AZs for high availability — if one AZ goes down, others keep running.",
+      connectsTo: ["aws-vpc"],
+      fields: [
+        {
+          name: "azName",
+          label: "Availability Zone",
+          type: "select",
+          default: "us-east-1a",
+          options: [
+            "us-east-1a",
+            "us-east-1b",
+            "us-east-1c",
+            "us-west-2a",
+            "us-west-2b",
+            "us-west-2c",
+            "eu-west-1a",
+            "eu-west-1b",
+            "eu-west-1c",
+          ],
+        },
+      ],
+      outputs: ["Availability Zone"],
+      isContainer: true,
+      containerLevel: 2,
+    },
+    // Compute
     {
       id: "aws-ec2",
       name: "EC2 Instance",
@@ -10,6 +79,17 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
       category: "compute",
       provider: "aws",
       description: "Virtual server in the cloud",
+      useCase:
+        "A virtual server (like a computer in the cloud). Use it to run web apps, APIs, or any software that needs a dedicated machine. Think of it as renting a computer from Amazon.",
+      connectsTo: [
+        "aws-vpc",
+        "aws-subnet",
+        "aws-sg",
+        "aws-s3",
+        "aws-rds",
+        "aws-iam-role",
+        "aws-elb",
+      ],
       fields: [
         {
           name: "instanceType",
@@ -38,7 +118,15 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
           default: "us-east-1",
           options: ["us-east-1", "us-west-2", "eu-west-1", "ap-south-1"],
         },
+        {
+          name: "availabilityZone",
+          label: "Availability Zone",
+          type: "select",
+          default: "us-east-1a",
+          options: ["us-east-1a", "us-east-1b", "us-east-1c"],
+        },
       ],
+      outputs: ["Instance ID", "Public IP", "Private IP"],
     },
     {
       id: "aws-lambda",
@@ -47,6 +135,9 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
       category: "compute",
       provider: "aws",
       description: "Serverless compute service",
+      useCase:
+        "Run code without managing servers. Perfect for event-driven tasks like processing uploads, handling API requests, or running scheduled jobs. You only pay when your code runs.",
+      connectsTo: ["aws-s3", "aws-rds", "aws-sqs", "aws-sns", "aws-iam-role"],
       fields: [
         {
           name: "runtime",
@@ -62,8 +153,17 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
           default: 30,
         },
         { name: "memory", label: "Memory (MB)", type: "number", default: 128 },
+        {
+          name: "region",
+          label: "Region",
+          type: "select",
+          default: "us-east-1",
+          options: ["us-east-1", "us-west-2", "eu-west-1", "ap-south-1"],
+        },
       ],
+      outputs: ["Function ARN", "Invoke URL"],
     },
+    // Network
     {
       id: "aws-vpc",
       name: "VPC",
@@ -71,6 +171,9 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
       category: "network",
       provider: "aws",
       description: "Virtual Private Cloud",
+      useCase:
+        "Your private network in AWS. Like having your own isolated section of the cloud. All your resources (EC2, RDS, etc.) live inside a VPC. Every AWS project needs one.",
+      connectsTo: ["aws-subnet", "aws-sg"],
       fields: [
         {
           name: "cidrBlock",
@@ -84,123 +187,17 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
           type: "boolean",
           default: true,
         },
-      ],
-    },
-    {
-      id: "aws-s3",
-      name: "S3 Bucket",
-      icon: "Archive" satisfies IconName,
-      category: "storage",
-      provider: "aws",
-      description: "Object storage service",
-      fields: [
         {
-          name: "bucketName",
-          label: "Bucket Name",
-          type: "string",
-          default: "my-bucket",
-        },
-        {
-          name: "acl",
-          label: "ACL",
+          name: "region",
+          label: "Region",
           type: "select",
-          default: "private",
-          options: ["private", "public-read", "authenticated-read"],
+          default: "us-east-1",
+          options: ["us-east-1", "us-west-2", "eu-west-1", "ap-south-1"],
         },
       ],
-    },
-    {
-      id: "aws-rds",
-      name: "RDS Database",
-      icon: "Database" satisfies IconName,
-      category: "database",
-      provider: "aws",
-      description: "Managed relational database",
-      fields: [
-        {
-          name: "engine",
-          label: "Engine",
-          type: "select",
-          default: "mysql",
-          options: ["mysql", "postgres", "mariadb", "aurora-mysql"],
-        },
-        {
-          name: "instanceClass",
-          label: "Instance Class",
-          type: "select",
-          default: "db.t3.micro",
-          options: ["db.t3.micro", "db.t3.small", "db.t3.medium"],
-        },
-        {
-          name: "allocatedStorage",
-          label: "Allocated Storage (GB)",
-          type: "number",
-          default: 20,
-        },
-      ],
-    },
-    {
-      id: "aws-sg",
-      name: "Security Group",
-      icon: "Shield" satisfies IconName,
-      category: "security",
-      provider: "aws",
-      description: "Virtual firewall",
-      fields: [
-        {
-          name: "description",
-          label: "Description",
-          type: "string",
-          default: "Security group",
-        },
-      ],
-    },
-    {
-      id: "aws-elb",
-      name: "Load Balancer",
-      icon: "GitBranch" satisfies IconName,
-      category: "network",
-      provider: "aws",
-      description: "Elastic Load Balancer",
-      fields: [
-        {
-          name: "loadBalancerType",
-          label: "Type",
-          type: "select",
-          default: "application",
-          options: ["application", "network", "gateway"],
-        },
-        {
-          name: "scheme",
-          label: "Scheme",
-          type: "select",
-          default: "internet-facing",
-          options: ["internet-facing", "internal"],
-        },
-      ],
-    },
-    {
-      id: "aws-route53",
-      name: "Route 53",
-      icon: "Globe" satisfies IconName,
-      category: "dns",
-      provider: "aws",
-      description: "DNS service",
-      fields: [
-        {
-          name: "domainName",
-          label: "Domain Name",
-          type: "string",
-          default: "example.com",
-        },
-        {
-          name: "recordType",
-          label: "Record Type",
-          type: "select",
-          default: "A",
-          options: ["A", "AAAA", "CNAME", "MX"],
-        },
-      ],
+      outputs: ["VPC ID", "CIDR Block"],
+      isContainer: true,
+      containerLevel: 3,
     },
     {
       id: "aws-subnet",
@@ -209,6 +206,9 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
       category: "network",
       provider: "aws",
       description: "VPC subnet",
+      useCase:
+        "A smaller network inside your VPC. Public subnets face the internet; private subnets are hidden. Use public for web servers, private for databases.",
+      connectsTo: ["aws-ec2", "aws-rds", "aws-ecs"],
       fields: [
         {
           name: "cidrBlock",
@@ -230,6 +230,203 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
           default: true,
         },
       ],
+      outputs: ["Subnet ID"],
+      isContainer: true,
+      containerLevel: 4,
+    },
+    {
+      id: "aws-elb",
+      name: "Load Balancer",
+      icon: "GitBranch" satisfies IconName,
+      category: "network",
+      provider: "aws",
+      description: "Elastic Load Balancer",
+      useCase:
+        "Distributes incoming traffic across multiple EC2 instances. Essential for high-availability apps — if one server goes down, traffic routes to others.",
+      connectsTo: ["aws-ec2", "aws-vpc", "aws-sg", "aws-ecs"],
+      fields: [
+        {
+          name: "loadBalancerType",
+          label: "Type",
+          type: "select",
+          default: "application",
+          options: ["application", "network", "gateway"],
+        },
+        {
+          name: "scheme",
+          label: "Scheme",
+          type: "select",
+          default: "internet-facing",
+          options: ["internet-facing", "internal"],
+        },
+        {
+          name: "region",
+          label: "Region",
+          type: "select",
+          default: "us-east-1",
+          options: ["us-east-1", "us-west-2", "eu-west-1", "ap-south-1"],
+        },
+      ],
+      outputs: ["DNS Name", "ARN"],
+    },
+    {
+      id: "aws-cloudfront",
+      name: "CloudFront",
+      icon: "Globe" satisfies IconName,
+      category: "network",
+      provider: "aws",
+      description: "Content delivery network",
+      useCase:
+        "A CDN that caches your content at edge locations worldwide. Makes your website or API faster for users everywhere. Often placed in front of S3 or a Load Balancer.",
+      connectsTo: ["aws-s3", "aws-elb"],
+      fields: [
+        {
+          name: "priceClass",
+          label: "Price Class",
+          type: "select",
+          default: "PriceClass_100",
+          options: ["PriceClass_100", "PriceClass_200", "PriceClass_All"],
+        },
+        {
+          name: "defaultTtl",
+          label: "Default TTL (seconds)",
+          type: "number",
+          default: 86400,
+        },
+      ],
+      outputs: ["Domain Name"],
+    },
+    {
+      id: "aws-route53",
+      name: "Route 53",
+      icon: "Globe" satisfies IconName,
+      category: "dns",
+      provider: "aws",
+      description: "DNS service",
+      useCase:
+        "AWS DNS service. Maps domain names (like example.com) to your infrastructure. Use it to point your domain to a Load Balancer or CloudFront.",
+      connectsTo: ["aws-elb", "aws-cloudfront", "aws-s3"],
+      fields: [
+        {
+          name: "domainName",
+          label: "Domain Name",
+          type: "string",
+          default: "example.com",
+        },
+        {
+          name: "recordType",
+          label: "Record Type",
+          type: "select",
+          default: "A",
+          options: ["A", "AAAA", "CNAME", "MX"],
+        },
+      ],
+      outputs: ["Hosted Zone ID"],
+    },
+    // Storage
+    {
+      id: "aws-s3",
+      name: "S3 Bucket",
+      icon: "Archive" satisfies IconName,
+      category: "storage",
+      provider: "aws",
+      description: "Object storage service",
+      useCase:
+        "Store any type of file — images, backups, static websites, logs. Infinitely scalable and very cheap. The most used AWS service.",
+      connectsTo: ["aws-cloudfront", "aws-iam-role"],
+      fields: [
+        {
+          name: "bucketName",
+          label: "Bucket Name",
+          type: "string",
+          default: "my-bucket",
+        },
+        {
+          name: "acl",
+          label: "ACL",
+          type: "select",
+          default: "private",
+          options: ["private", "public-read", "authenticated-read"],
+        },
+        {
+          name: "region",
+          label: "Region",
+          type: "select",
+          default: "us-east-1",
+          options: ["us-east-1", "us-west-2", "eu-west-1", "ap-south-1"],
+        },
+      ],
+      outputs: ["Bucket ARN", "Bucket Name"],
+    },
+    // Database
+    {
+      id: "aws-rds",
+      name: "RDS Database",
+      icon: "Database" satisfies IconName,
+      category: "database",
+      provider: "aws",
+      description: "Managed relational database",
+      useCase:
+        "A managed database (MySQL, PostgreSQL, etc.). AWS handles backups, updates, and scaling. Use it when your app needs a relational database.",
+      connectsTo: ["aws-sg", "aws-subnet"],
+      fields: [
+        {
+          name: "engine",
+          label: "Engine",
+          type: "select",
+          default: "mysql",
+          options: ["mysql", "postgres", "mariadb", "aurora-mysql"],
+        },
+        {
+          name: "instanceClass",
+          label: "Instance Class",
+          type: "select",
+          default: "db.t3.micro",
+          options: ["db.t3.micro", "db.t3.small", "db.t3.medium"],
+        },
+        {
+          name: "allocatedStorage",
+          label: "Allocated Storage (GB)",
+          type: "number",
+          default: 20,
+        },
+        {
+          name: "region",
+          label: "Region",
+          type: "select",
+          default: "us-east-1",
+          options: ["us-east-1", "us-west-2", "eu-west-1", "ap-south-1"],
+        },
+        {
+          name: "availabilityZone",
+          label: "Availability Zone",
+          type: "select",
+          default: "us-east-1a",
+          options: ["us-east-1a", "us-east-1b", "us-east-1c"],
+        },
+      ],
+      outputs: ["Endpoint", "Port"],
+    },
+    // Security
+    {
+      id: "aws-sg",
+      name: "Security Group",
+      icon: "Shield" satisfies IconName,
+      category: "security",
+      provider: "aws",
+      description: "Virtual firewall",
+      useCase:
+        "A virtual firewall that controls who can access your resources. Define rules like 'allow web traffic on port 80' or 'only my IP can SSH in'.",
+      connectsTo: ["aws-ec2", "aws-rds", "aws-elb", "aws-ecs"],
+      fields: [
+        {
+          name: "description",
+          label: "Description",
+          type: "string",
+          default: "Security group",
+        },
+      ],
+      outputs: ["Security Group ID"],
     },
     {
       id: "aws-iam-role",
@@ -238,6 +435,9 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
       category: "security",
       provider: "aws",
       description: "Identity and access management role",
+      useCase:
+        "Permissions for AWS services. Instead of using passwords, you assign roles. For example, 'this Lambda can read from this S3 bucket'.",
+      connectsTo: ["aws-ec2", "aws-lambda", "aws-ecs"],
       fields: [
         {
           name: "roleName",
@@ -257,30 +457,9 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
           ],
         },
       ],
+      outputs: ["Role ARN"],
     },
-    {
-      id: "aws-cloudfront",
-      name: "CloudFront",
-      icon: "Globe" satisfies IconName,
-      category: "network",
-      provider: "aws",
-      description: "Content delivery network",
-      fields: [
-        {
-          name: "priceClass",
-          label: "Price Class",
-          type: "select",
-          default: "PriceClass_100",
-          options: ["PriceClass_100", "PriceClass_200", "PriceClass_All"],
-        },
-        {
-          name: "defaultTtl",
-          label: "Default TTL (seconds)",
-          type: "number",
-          default: 86400,
-        },
-      ],
-    },
+    // Messaging
     {
       id: "aws-sns",
       name: "SNS Topic",
@@ -288,6 +467,9 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
       category: "compute",
       provider: "aws",
       description: "Simple Notification Service",
+      useCase:
+        "Send notifications to multiple subscribers. Push messages to email, SMS, Lambda, or SQS. Great for alerts, fan-out patterns, and event-driven architectures.",
+      connectsTo: ["aws-sqs", "aws-lambda"],
       fields: [
         {
           name: "topicName",
@@ -301,7 +483,15 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
           type: "boolean",
           default: false,
         },
+        {
+          name: "region",
+          label: "Region",
+          type: "select",
+          default: "us-east-1",
+          options: ["us-east-1", "us-west-2", "eu-west-1", "ap-south-1"],
+        },
       ],
+      outputs: ["Topic ARN"],
     },
     {
       id: "aws-sqs",
@@ -310,6 +500,9 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
       category: "compute",
       provider: "aws",
       description: "Simple Queue Service",
+      useCase:
+        "A message queue that decouples your services. Producer sends messages, consumer processes them at its own pace. Prevents one slow service from blocking others.",
+      connectsTo: ["aws-lambda"],
       fields: [
         {
           name: "queueName",
@@ -329,7 +522,15 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
           type: "number",
           default: 30,
         },
+        {
+          name: "region",
+          label: "Region",
+          type: "select",
+          default: "us-east-1",
+          options: ["us-east-1", "us-west-2", "eu-west-1", "ap-south-1"],
+        },
       ],
+      outputs: ["Queue URL"],
     },
     {
       id: "aws-ecs",
@@ -338,6 +539,9 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
       category: "compute",
       provider: "aws",
       description: "Elastic Container Service",
+      useCase:
+        "Run Docker containers without managing servers (with Fargate). Perfect for microservices, background workers, and any containerized application.",
+      connectsTo: ["aws-vpc", "aws-elb", "aws-iam-role", "aws-sg"],
       fields: [
         {
           name: "clusterName",
@@ -352,10 +556,84 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
           default: "FARGATE",
           options: ["FARGATE", "FARGATE_SPOT", "EC2"],
         },
+        {
+          name: "region",
+          label: "Region",
+          type: "select",
+          default: "us-east-1",
+          options: ["us-east-1", "us-west-2", "eu-west-1", "ap-south-1"],
+        },
       ],
+      outputs: ["Cluster ARN"],
+      isContainer: true,
+      containerLevel: 4,
     },
   ],
   gcp: [
+    // Infrastructure (containers)
+    {
+      id: "gcp-region",
+      name: "GCP Region",
+      icon: "Globe" satisfies IconName,
+      category: "infrastructure",
+      provider: "gcp",
+      description: "GCP Region container",
+      useCase:
+        "A GCP Region is a specific geographical location where you can run your resources. Choose regions close to your users for lower latency.",
+      connectsTo: ["gcp-zone"],
+      fields: [
+        {
+          name: "regionName",
+          label: "Region",
+          type: "select",
+          default: "us-central1",
+          options: [
+            "us-central1",
+            "us-east1",
+            "us-west1",
+            "europe-west1",
+            "europe-west2",
+            "asia-east1",
+            "asia-southeast1",
+          ],
+        },
+      ],
+      outputs: ["Region"],
+      isContainer: true,
+      containerLevel: 1,
+    },
+    {
+      id: "gcp-zone",
+      name: "GCP Zone",
+      icon: "Layers" satisfies IconName,
+      category: "infrastructure",
+      provider: "gcp",
+      description: "GCP Zone container",
+      useCase:
+        "A Zone is an isolated location within a region. Deploy resources across zones for higher availability. Similar to AWS Availability Zones.",
+      connectsTo: ["gcp-vpc"],
+      fields: [
+        {
+          name: "zoneName",
+          label: "Zone",
+          type: "select",
+          default: "us-central1-a",
+          options: [
+            "us-central1-a",
+            "us-central1-b",
+            "us-central1-c",
+            "us-east1-b",
+            "us-east1-c",
+            "europe-west1-b",
+            "europe-west1-c",
+          ],
+        },
+      ],
+      outputs: ["Zone"],
+      isContainer: true,
+      containerLevel: 2,
+    },
+    // Compute
     {
       id: "gcp-compute",
       name: "Compute Engine",
@@ -363,6 +641,9 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
       category: "compute",
       provider: "gcp",
       description: "Virtual machine instance",
+      useCase:
+        "A virtual machine in Google Cloud. Similar to AWS EC2. Use for running applications, hosting websites, or any workload that needs a dedicated server.",
+      connectsTo: ["gcp-vpc", "gcp-gcs", "gcp-cloudsql"],
       fields: [
         {
           name: "machineType",
@@ -378,8 +659,112 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
           default: "us-central1-a",
           options: ["us-central1-a", "us-east1-b", "europe-west1-c"],
         },
+        {
+          name: "region",
+          label: "Region",
+          type: "select",
+          default: "us-central1",
+          options: ["us-central1", "us-east1", "europe-west1", "asia-east1"],
+        },
       ],
+      outputs: ["Instance ID", "External IP", "Internal IP"],
     },
+    {
+      id: "gcp-function",
+      name: "Cloud Function",
+      icon: "Zap" satisfies IconName,
+      category: "compute",
+      provider: "gcp",
+      description: "Serverless function",
+      useCase:
+        "Serverless functions in Google Cloud. Runs your code in response to events like HTTP requests or Cloud Storage changes. Similar to AWS Lambda.",
+      connectsTo: ["gcp-gcs", "gcp-cloudsql"],
+      fields: [
+        {
+          name: "runtime",
+          label: "Runtime",
+          type: "select",
+          default: "nodejs20",
+          options: ["nodejs20", "python312", "go121", "java17"],
+        },
+        { name: "memory", label: "Memory (MB)", type: "number", default: 256 },
+        {
+          name: "region",
+          label: "Region",
+          type: "select",
+          default: "us-central1",
+          options: ["us-central1", "us-east1", "europe-west1", "asia-east1"],
+        },
+      ],
+      outputs: ["Function URL", "Function Name"],
+    },
+    {
+      id: "gcp-gke",
+      name: "GKE Cluster",
+      icon: "Container" satisfies IconName,
+      category: "compute",
+      provider: "gcp",
+      description: "Google Kubernetes Engine",
+      useCase:
+        "Managed Kubernetes cluster. Run containerized applications at scale with Google managing the control plane. Similar to AWS ECS/EKS.",
+      connectsTo: ["gcp-vpc", "gcp-cloudsql"],
+      fields: [
+        {
+          name: "initialNodeCount",
+          label: "Initial Node Count",
+          type: "number",
+          default: 3,
+        },
+        {
+          name: "machineType",
+          label: "Machine Type",
+          type: "select",
+          default: "e2-medium",
+          options: ["e2-medium", "e2-standard-2", "n1-standard-2"],
+        },
+        {
+          name: "region",
+          label: "Region",
+          type: "select",
+          default: "us-central1",
+          options: ["us-central1", "us-east1", "europe-west1", "asia-east1"],
+        },
+      ],
+      outputs: ["Cluster Endpoint", "Cluster Name"],
+      isContainer: true,
+      containerLevel: 4,
+    },
+    // Network
+    {
+      id: "gcp-vpc",
+      name: "VPC Network",
+      icon: "Network" satisfies IconName,
+      category: "network",
+      provider: "gcp",
+      description: "Virtual Private Cloud network",
+      useCase:
+        "Your private network in Google Cloud. Connects all your resources securely. Similar to AWS VPC.",
+      connectsTo: ["gcp-compute", "gcp-gke"],
+      fields: [
+        {
+          name: "autoCreateSubnetworks",
+          label: "Auto Create Subnets",
+          type: "boolean",
+          default: true,
+        },
+        {
+          name: "region",
+          label: "Region",
+          type: "select",
+          default: "us-central1",
+          options: ["us-central1", "us-east1", "europe-west1", "asia-east1"],
+        },
+      ],
+      outputs: ["Network ID", "Network Name"],
+      isContainer: true,
+      containerLevel: 3,
+    },
+    // Storage
     {
       id: "gcp-gcs",
       name: "Cloud Storage",
@@ -387,6 +772,9 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
       category: "storage",
       provider: "gcp",
       description: "Object storage",
+      useCase:
+        "Google's object storage. Store files, serve static websites, or keep backups. Similar to AWS S3.",
+      connectsTo: [],
       fields: [
         {
           name: "bucketName",
@@ -401,8 +789,17 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
           default: "STANDARD",
           options: ["STANDARD", "NEARLINE", "COLDLINE"],
         },
+        {
+          name: "region",
+          label: "Region",
+          type: "select",
+          default: "us-central1",
+          options: ["us-central1", "us-east1", "europe-west1", "asia-east1"],
+        },
       ],
+      outputs: ["Bucket URL", "Bucket Name"],
     },
+    // Database
     {
       id: "gcp-cloudsql",
       name: "Cloud SQL",
@@ -410,6 +807,9 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
       category: "database",
       provider: "gcp",
       description: "Managed database service",
+      useCase:
+        "Managed database service in Google Cloud. Supports MySQL, PostgreSQL, and SQL Server. Google handles maintenance and backups.",
+      connectsTo: [],
       fields: [
         {
           name: "databaseVersion",
@@ -425,67 +825,74 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
           default: "db-f1-micro",
           options: ["db-f1-micro", "db-g1-small"],
         },
-      ],
-    },
-    {
-      id: "gcp-function",
-      name: "Cloud Function",
-      icon: "Zap" satisfies IconName,
-      category: "compute",
-      provider: "gcp",
-      description: "Serverless function",
-      fields: [
         {
-          name: "runtime",
-          label: "Runtime",
+          name: "region",
+          label: "Region",
           type: "select",
-          default: "nodejs20",
-          options: ["nodejs20", "python312", "go121", "java17"],
-        },
-        { name: "memory", label: "Memory (MB)", type: "number", default: 256 },
-      ],
-    },
-    {
-      id: "gcp-vpc",
-      name: "VPC Network",
-      icon: "Network" satisfies IconName,
-      category: "network",
-      provider: "gcp",
-      description: "Virtual Private Cloud network",
-      fields: [
-        {
-          name: "autoCreateSubnetworks",
-          label: "Auto Create Subnets",
-          type: "boolean",
-          default: true,
+          default: "us-central1",
+          options: ["us-central1", "us-east1", "europe-west1", "asia-east1"],
         },
       ],
-    },
-    {
-      id: "gcp-gke",
-      name: "GKE Cluster",
-      icon: "Container" satisfies IconName,
-      category: "compute",
-      provider: "gcp",
-      description: "Google Kubernetes Engine",
-      fields: [
-        {
-          name: "initialNodeCount",
-          label: "Initial Node Count",
-          type: "number",
-          default: 3,
-        },
-        {
-          name: "machineType",
-          label: "Machine Type",
-          type: "select",
-          default: "e2-medium",
-          options: ["e2-medium", "e2-standard-2", "n1-standard-2"],
-        },
-      ],
+      outputs: ["Connection Name", "IP Address"],
     },
   ],
   azure: [
+    // Infrastructure (containers)
+    {
+      id: "azure-region",
+      name: "Azure Region",
+      icon: "Globe" satisfies IconName,
+      category: "infrastructure",
+      provider: "azure",
+      description: "Azure Region container",
+      useCase:
+        "An Azure Region is a set of data centers deployed within a defined perimeter. Choose regions near your users for best performance.",
+      connectsTo: ["azure-resource-group"],
+      fields: [
+        {
+          name: "regionName",
+          label: "Region",
+          type: "select",
+          default: "eastus",
+          options: [
+            "eastus",
+            "eastus2",
+            "westus",
+            "westus2",
+            "westeurope",
+            "northeurope",
+            "southeastasia",
+            "centralus",
+          ],
+        },
+      ],
+      outputs: ["Region"],
+      isContainer: true,
+      containerLevel: 1,
+    },
+    {
+      id: "azure-resource-group",
+      name: "Resource Group",
+      icon: "Layers" satisfies IconName,
+      category: "infrastructure",
+      provider: "azure",
+      description: "Azure Resource Group container",
+      useCase:
+        "A Resource Group is a logical container for Azure resources. Group related resources together for easier management, billing, and access control.",
+      connectsTo: ["azure-vnet"],
+      fields: [
+        {
+          name: "name",
+          label: "Resource Group Name",
+          type: "string",
+          default: "my-resource-group",
+        },
+      ],
+      outputs: ["Resource Group ID"],
+      isContainer: true,
+      containerLevel: 2,
+    },
+    // Compute
     {
       id: "azure-vm",
       name: "Virtual Machine",
@@ -493,6 +900,9 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
       category: "compute",
       provider: "azure",
       description: "Windows or Linux VM",
+      useCase:
+        "A virtual machine in Azure. Run Windows or Linux workloads. Similar to AWS EC2 and GCP Compute Engine.",
+      connectsTo: ["azure-vnet", "azure-storage", "azure-sql"],
       fields: [
         {
           name: "vmSize",
@@ -507,57 +917,15 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
           type: "string",
           default: "admin",
         },
-      ],
-    },
-    {
-      id: "azure-storage",
-      name: "Storage Account",
-      icon: "Warehouse" satisfies IconName,
-      category: "storage",
-      provider: "azure",
-      description: "Blob, file, and table storage",
-      fields: [
         {
-          name: "accountType",
-          label: "Account Type",
+          name: "region",
+          label: "Region",
           type: "select",
-          default: "Standard_LRS",
-          options: ["Standard_LRS", "Standard_GRS", "Premium_LRS"],
+          default: "eastus",
+          options: ["eastus", "westus2", "westeurope", "southeastasia"],
         },
       ],
-    },
-    {
-      id: "azure-sql",
-      name: "Azure SQL",
-      icon: "Database" satisfies IconName,
-      category: "database",
-      provider: "azure",
-      description: "Managed SQL database",
-      fields: [
-        {
-          name: "skuName",
-          label: "SKU Name",
-          type: "select",
-          default: "Basic",
-          options: ["Basic", "Standard", "Premium"],
-        },
-      ],
-    },
-    {
-      id: "azure-vnet",
-      name: "Virtual Network",
-      icon: "Network" satisfies IconName,
-      category: "network",
-      provider: "azure",
-      description: "Azure Virtual Network",
-      fields: [
-        {
-          name: "addressSpace",
-          label: "Address Space",
-          type: "string",
-          default: "10.0.0.0/16",
-        },
-      ],
+      outputs: ["VM ID", "Public IP", "Private IP"],
     },
     {
       id: "azure-function",
@@ -566,6 +934,9 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
       category: "compute",
       provider: "azure",
       description: "Serverless compute",
+      useCase:
+        "Serverless compute in Azure. Run event-driven code without managing infrastructure. Similar to AWS Lambda.",
+      connectsTo: ["azure-storage", "azure-sql"],
       fields: [
         {
           name: "runtime",
@@ -574,7 +945,15 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
           default: "node",
           options: ["node", "python", "dotnet", "java"],
         },
+        {
+          name: "region",
+          label: "Region",
+          type: "select",
+          default: "eastus",
+          options: ["eastus", "westus2", "westeurope", "southeastasia"],
+        },
       ],
+      outputs: ["Function URL", "Function Name"],
     },
     {
       id: "azure-aks",
@@ -583,6 +962,9 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
       category: "compute",
       provider: "azure",
       description: "Azure Kubernetes Service",
+      useCase:
+        "Managed Kubernetes in Azure. Deploy and scale containerized applications. Similar to GCP GKE and AWS ECS.",
+      connectsTo: ["azure-vnet", "azure-sql"],
       fields: [
         { name: "nodeCount", label: "Node Count", type: "number", default: 3 },
         {
@@ -592,7 +974,105 @@ export const cloudComponents: Record<CloudProvider, CloudComponent[]> = {
           default: "Standard_DS2_v2",
           options: ["Standard_DS2_v2", "Standard_B2s", "Standard_D4s_v3"],
         },
+        {
+          name: "region",
+          label: "Region",
+          type: "select",
+          default: "eastus",
+          options: ["eastus", "westus2", "westeurope", "southeastasia"],
+        },
       ],
+      outputs: ["Cluster FQDN", "Cluster ID"],
+      isContainer: true,
+      containerLevel: 4,
+    },
+    // Network
+    {
+      id: "azure-vnet",
+      name: "Virtual Network",
+      icon: "Network" satisfies IconName,
+      category: "network",
+      provider: "azure",
+      description: "Azure Virtual Network",
+      useCase:
+        "Your private network in Azure. Isolates and connects your resources. Similar to AWS VPC.",
+      connectsTo: ["azure-vm", "azure-aks"],
+      fields: [
+        {
+          name: "addressSpace",
+          label: "Address Space",
+          type: "string",
+          default: "10.0.0.0/16",
+        },
+        {
+          name: "region",
+          label: "Region",
+          type: "select",
+          default: "eastus",
+          options: ["eastus", "westus2", "westeurope", "southeastasia"],
+        },
+      ],
+      outputs: ["VNet ID", "Address Space"],
+      isContainer: true,
+      containerLevel: 3,
+    },
+    // Storage
+    {
+      id: "azure-storage",
+      name: "Storage Account",
+      icon: "Warehouse" satisfies IconName,
+      category: "storage",
+      provider: "azure",
+      description: "Blob, file, and table storage",
+      useCase:
+        "Azure's storage service for blobs, files, queues, and tables. Similar to AWS S3. Store any type of data.",
+      connectsTo: [],
+      fields: [
+        {
+          name: "accountType",
+          label: "Account Type",
+          type: "select",
+          default: "Standard_LRS",
+          options: ["Standard_LRS", "Standard_GRS", "Premium_LRS"],
+        },
+        {
+          name: "region",
+          label: "Region",
+          type: "select",
+          default: "eastus",
+          options: ["eastus", "westus2", "westeurope", "southeastasia"],
+        },
+      ],
+      outputs: ["Storage Account ID", "Primary Endpoint"],
+    },
+    // Database
+    {
+      id: "azure-sql",
+      name: "Azure SQL",
+      icon: "Database" satisfies IconName,
+      category: "database",
+      provider: "azure",
+      description: "Managed SQL database",
+      useCase:
+        "Managed SQL database in Azure. Fully managed with built-in intelligence for performance optimization. Similar to AWS RDS.",
+      connectsTo: [],
+      fields: [
+        {
+          name: "skuName",
+          label: "SKU Name",
+          type: "select",
+          default: "Basic",
+          options: ["Basic", "Standard", "Premium"],
+        },
+        {
+          name: "region",
+          label: "Region",
+          type: "select",
+          default: "eastus",
+          options: ["eastus", "westus2", "westeurope", "southeastasia"],
+        },
+      ],
+      outputs: ["Server FQDN", "Database ID"],
     },
   ],
 };

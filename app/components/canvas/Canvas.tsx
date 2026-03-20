@@ -164,10 +164,9 @@ export function Canvas({
       // Prevent self-connections
       if (connection.source === connection.target) return false;
 
-      // Check category rules
       return checkValidConnection(
-        sourceNode.data.component.category,
-        targetNode.data.component.category,
+        sourceNode.data.component,
+        targetNode.data.component,
       );
     },
     [nodes],
