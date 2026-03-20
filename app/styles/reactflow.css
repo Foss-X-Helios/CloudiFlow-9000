@@ -19,3 +19,15 @@
 .react-flow__node-container {
   z-index: 0 !important;
 }
+
+/* Container node body is transparent to pointer events so children are clickable */
+.react-flow__node-container > div {
+  pointer-events: none;
+}
+
+/* But the header bar, handles, and resizer remain interactive */
+.react-flow__node-container .container-header,
+.react-flow__node-container .react-flow__handle,
+.react-flow__node-container .react-flow__resize-control {
+  pointer-events: auto;
+}

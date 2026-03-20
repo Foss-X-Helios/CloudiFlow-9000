@@ -1,4 +1,4 @@
-import { Handle, type NodeProps, Position } from "@xyflow/react";
+import { Handle, type NodeProps, NodeResizer, Position } from "@xyflow/react";
 import { Server } from "lucide-react";
 import { memo } from "react";
 import { cloudIconMap } from "~/lib/cloud-icons";
@@ -54,46 +54,65 @@ function ContainerNodeComponent({ data, selected }: NodeProps<CanvasNode>) {
     "";
 
   return (
-    <div
-      className={`rounded-lg border-2 ${style.border} ${style.borderStyle} ${style.bg} min-h-full min-w-full ${
-        selected
-          ? "!border-[#f38020] shadow-[0_0_20px_rgba(243,128,32,0.12)]"
-          : ""
-      }`}
-    >
-      <Handle
-        type="target"
-        position={Position.Left}
-        className="!w-3 !h-3 !bg-[#1a1a1a] !border-2 !border-[#f38020] hover:!bg-[#f38020] hover:!scale-125 !transition-all !duration-150 !top-5 !-left-1.5"
+    <>
+      <NodeResizer
+        isVisible={selected}
+        minWidth={200}
+        minHeight={100}
+        lineStyle={{ stroke: "#f38020", strokeWidth: 1 }}
+        handleStyle={{
+          width: 8,
+          height: 8,
+          backgroundColor: "#1a1a1a",
+          border: "2px solid #f38020",
+          borderRadius: 2,
+        }}
       />
-
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-inherit rounded-t-lg bg-[#111]/60">
-        <IconComponent
-          width={16}
-          height={16}
-          className="w-4 h-4 flex-shrink-0"
+      <div
+        className={`rounded-lg border-2 ${style.border} ${style.borderStyle} ${style.bg} h-full w-full ${
+          selected
+            ? "!border-[#f38020] shadow-[0_0_20px_rgba(243,128,32,0.12)]"
+            : ""
+        }`}
+      >
+        <Handle
+          type="target"
+          position={Position.Left}
+          className="!w-3 !h-3 !bg-[#1a1a1a] !border-2 !border-[#f38020] hover:!bg-[#f38020] hover:!scale-125 !transition-all !duration-150 !top-5 !-left-1.5"
         />
-        <span className="text-[12px] font-semibold text-[#ddd] truncate">
-          {label}
-        </span>
-        <span
-          className={`text-[9px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded ${badgeColor}`}
-        >
-          {component.provider}
-        </span>
-        {regionLabel && (
-          <span className="text-[10px] text-[#888] ml-auto truncate">
-            {regionLabel}
-          </span>
-        )}
-      </div>
 
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!w-3 !h-3 !bg-[#1a1a1a] !border-2 !border-[#f38020] hover:!bg-[#f38020] hover:!scale-125 !transition-all !duration-150 !top-5 !-right-1.5"
-      />
-    </div>
+        {/* Header bar — only this area is draggable and selects the container */}
+        <div className="flex items-center gap-2 px-3 py-2 border-b border-inherit rounded-t-lg bg-[#111]/60 cursor-grab active:cursor-grabbing container-header">
+          <IconComponent
+            width={16}
+            height={16}
+            className="w-4 h-4 flex-shrink-0"
+          />
+          <span className="text-[12px] font-semibold text-[#ddd] truncate">
+            {label}
+          </span>
+          <span
+            className={`text-[9px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded ${badgeColor}`}
+          >
+            {component.provider}
+          </span>
+          {regionLabel && (
+            <span className="text-[10px] text-[#888] ml-auto truncate">
+              {regionLabel}
+            </span>
+          )}
+        </div>
+
+        {/* Body area — pointer-events:none so children inside are clickable */}
+        <div className="pointer-events-none flex-1" />
+
+        <Handle
+          type="source"
+          position={Position.Right}
+          className="!w-3 !h-3 !bg-[#1a1a1a] !border-2 !border-[#f38020] hover:!bg-[#f38020] hover:!scale-125 !transition-all !duration-150 !top-5 !-right-1.5"
+        />
+      </div>
+    </>
   );
 }
 

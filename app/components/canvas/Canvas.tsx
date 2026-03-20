@@ -201,6 +201,7 @@ export function Canvas({
                 width: containerSizes[containerLevel]?.width ?? 500,
                 height: containerSizes[containerLevel]?.height ?? 350,
               },
+              dragHandle: ".container-header",
             }
           : {}),
         ...(parentId
