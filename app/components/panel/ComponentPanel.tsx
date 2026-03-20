@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronRight, Server } from "lucide-react";
 import { useState } from "react";
+import { cloudIconMap } from "~/lib/cloud-icons";
 import { cloudComponents } from "~/lib/components";
 import { iconMap } from "~/lib/icons";
 import type { CloudComponent, CloudProvider, ComponentCategory } from "~/types";
@@ -90,7 +91,9 @@ export function ComponentPanel({ provider }: ComponentPanelProps) {
               {!collapsed.has(category as ComponentCategory) && (
                 <div className="space-y-0.5 mt-0.5">
                   {categoryComponents.map((component) => {
-                    const IconComponent = iconMap[component.icon] || Server;
+                    const CloudIcon = cloudIconMap[component.id];
+                    const IconComponent =
+                      CloudIcon ?? iconMap[component.icon] ?? Server;
                     return (
                       <button
                         type="button"

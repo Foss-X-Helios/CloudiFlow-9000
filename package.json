@@ -23,8 +23,11 @@
   "dependencies": {
     "@react-router/node": "7.13.1",
     "@react-router/serve": "7.13.1",
+    "@threeveloper/azure-react-icons": "^1.1.1",
     "@xyflow/react": "^12.10.1",
     "animejs": "3.2.2",
+    "aws-react-icons": "^3.3.0",
+    "gcp-icons": "^1.0.6",
     "isbot": "^5.1.36",
     "lucide-react": "^0.577.0",
     "react": "^19.2.4",

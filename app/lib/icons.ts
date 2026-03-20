@@ -52,3 +52,5 @@ export const iconMap: Record<string, LucideIcon> = {
 };
 
 export type IconName = keyof typeof iconMap;
+
+export { cloudIconMap } from "./cloud-icons";

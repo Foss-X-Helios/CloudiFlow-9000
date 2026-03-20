@@ -1,4 +1,5 @@
 import { Info, Server, X } from "lucide-react";
+import { cloudIconMap } from "~/lib/cloud-icons";
 import { cloudComponents } from "~/lib/components";
 import { iconMap } from "~/lib/icons";
 import type { CanvasNode } from "~/types";
@@ -19,7 +20,8 @@ export function NodeConfig({
   if (!node) return null;
 
   const { component, config, label } = node.data;
-  const IconComponent = iconMap[component.icon] || Server;
+  const CloudIcon = cloudIconMap[component.id];
+  const IconComponent = CloudIcon ?? iconMap[component.icon] ?? Server;
 
   // Look up connected component names from connectsTo IDs
   const allComponents = cloudComponents[component.provider] || [];
@@ -86,7 +88,8 @@ export function NodeConfig({
             <div className="flex flex-wrap gap-1.5">
               {connectableComponents.map((c) => {
                 if (!c) return null;
-                const CIcon = iconMap[c.icon] || Server;
+                const CCloudIcon = cloudIconMap[c.id];
+                const CIcon = CCloudIcon ?? iconMap[c.icon] ?? Server;
                 return (
                   <div
                     key={c.id}

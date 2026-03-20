@@ -1,6 +1,7 @@
 import { Handle, type NodeProps, Position } from "@xyflow/react";
 import { Server } from "lucide-react";
 import { memo } from "react";
+import { cloudIconMap } from "~/lib/cloud-icons";
 import { iconMap } from "~/lib/icons";
 import type { CanvasNode, ComponentCategory } from "~/types";
 
@@ -15,7 +16,8 @@ const categoryColors: Record<ComponentCategory, string> = {
 
 function CloudNodeComponent({ data, selected }: NodeProps<CanvasNode>) {
   const { component, label } = data;
-  const IconComponent = iconMap[component.icon] || Server;
+  const CloudIcon = cloudIconMap[component.id];
+  const IconComponent = CloudIcon ?? iconMap[component.icon] ?? Server;
   const catColor =
     categoryColors[component.category] || "text-[#888] bg-[#252525]";
 
