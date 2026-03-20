@@ -13,7 +13,7 @@ import {
   useEdgesState,
   useNodesState,
 } from "@xyflow/react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "@xyflow/react/dist/style.css";
 
 import { ComponentPanel } from "~/components/panel/ComponentPanel";
@@ -282,6 +282,22 @@ export function Canvas({
     },
     [setNodes, setEdges, nodes],
   );
+
+  // Delete/Backspace key deletes the selected node
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedNodeId) return;
+      // Don't delete if user is typing in an input/textarea/select
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+        onNodeDelete(selectedNodeId);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedNodeId, onNodeDelete]);
 
   return (
     <div className="flex h-full w-full">

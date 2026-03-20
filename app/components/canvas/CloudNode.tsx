@@ -3,6 +3,7 @@ import { Server } from "lucide-react";
 import { memo } from "react";
 import { Tooltip } from "~/components/ui/Tooltip";
 import { cloudIconMap } from "~/lib/cloud-icons";
+import { cloudComponents } from "~/lib/components";
 import { iconMap } from "~/lib/icons";
 import type { CanvasNode, ComponentCategory } from "~/types";
 
@@ -16,12 +17,27 @@ const categoryColors: Record<ComponentCategory, string> = {
   dns: "text-cyan-400 bg-cyan-400/10",
 };
 
+/** Cache: which component IDs are referenced as a target by any other component */
+const hasInputCache = new Map<string, boolean>();
+function componentHasInput(componentId: string, provider: string): boolean {
+  const key = `${provider}:${componentId}`;
+  if (hasInputCache.has(key)) return hasInputCache.get(key)!;
+  const allComponents =
+    cloudComponents[provider as keyof typeof cloudComponents] || [];
+  const result = allComponents.some((c) => c.connectsTo.includes(componentId));
+  hasInputCache.set(key, result);
+  return result;
+}
+
 function CloudNodeComponent({ data, selected }: NodeProps<CanvasNode>) {
   const { component, label } = data;
   const CloudIcon = cloudIconMap[component.id];
   const IconComponent = CloudIcon ?? iconMap[component.icon] ?? Server;
   const catColor =
     categoryColors[component.category] || "text-[#888] bg-[#252525]";
+
+  const hasOutput = component.connectsTo.length > 0;
+  const hasInput = componentHasInput(component.id, component.provider);
 
   return (
     <Tooltip
@@ -32,54 +48,44 @@ function CloudNodeComponent({ data, selected }: NodeProps<CanvasNode>) {
         icon: <IconComponent width={18} height={18} />,
       }}
     >
-      <div
-        className={`cloud-node relative px-4 py-3 rounded-xl border transition-all duration-200 min-w-[180px] ${
-          selected
-            ? "border-[#f38020] bg-[#1a1a1a] shadow-[0_0_25px_rgba(243,128,32,0.15)]"
-            : "border-[#2a2a2a] bg-[#161616] hover:border-[#f38020]/40 shadow-[0_12px_35px_rgba(0,0,0,0.45)]"
-        }`}
-      >
-        <Handle
-          type="target"
-          position={Position.Left}
-          className="!w-3 !h-3 !bg-[#1a1a1a] !border-2 !border-[#f38020] hover:!bg-[#f38020] hover:!scale-125 !transition-all !duration-150 !top-1/2 !-translate-y-1/2 !-left-1.5"
-        />
-
-        <div className="flex items-center gap-3">
-          <div
-            className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-              selected ? "bg-[#f38020]/15" : "bg-[#252525]"
-            }`}
-          >
-            <IconComponent
-              width={16}
-              height={16}
-              className={`w-4 h-4 ${selected ? "text-[#f38020]" : catColor.split(" ")[0]}`}
+      <div className="flex flex-col items-center">
+        {/* Node body — icon only */}
+        <div
+          className={`cloud-node relative rounded-xl border transition-all duration-200 w-12 h-12 flex items-center justify-center ${
+            selected
+              ? "border-[#f38020] bg-[#1a1a1a] shadow-[0_0_25px_rgba(243,128,32,0.15)]"
+              : "border-[#2a2a2a] bg-[#161616] hover:border-[#f38020]/40 shadow-[0_12px_35px_rgba(0,0,0,0.45)]"
+          }`}
+        >
+          {hasInput && (
+            <Handle
+              type="target"
+              position={Position.Left}
+              className="!w-3 !h-3 !bg-[#1a1a1a] !border-2 !border-[#f38020] hover:!bg-[#f38020] hover:!scale-125 !transition-all !duration-150 !top-1/2 !-translate-y-1/2 !-left-1.5"
             />
-          </div>
-          <div className="min-w-0">
-            <div className="text-[13px] font-medium text-[#e3e3e3] truncate">
-              {label}
-            </div>
-            <span
-              className={`inline-block text-[9px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded ${catColor}`}
-            >
-              {component.category}
-            </span>
-          </div>
+          )}
+
+          <IconComponent
+            width={24}
+            height={24}
+            className={`w-6 h-6 ${selected ? "text-[#f38020]" : catColor.split(" ")[0]}`}
+          />
+
+          {hasOutput && (
+            <Handle
+              type="source"
+              position={Position.Right}
+              className="!w-3 !h-3 !bg-[#1a1a1a] !border-2 !border-[#f38020] hover:!bg-[#f38020] hover:!scale-125 !transition-all !duration-150 !top-1/2 !-translate-y-1/2 !-right-1.5"
+            />
+          )}
         </div>
 
-        {component.outputs && component.outputs.length > 0 && (
-          <div className="mt-1.5 pl-11 text-[9px] text-[#666] truncate">
-            ↳ {component.outputs.join(", ")}
+        {/* Label below the node */}
+        <div className="mt-1.5 text-center max-w-[90px]">
+          <div className="text-[11px] font-medium text-[#ccc] truncate">
+            {label}
           </div>
-        )}
-
-        <Handle
-          type="source"
-          position={Position.Right}
-          className="!w-3 !h-3 !bg-[#1a1a1a] !border-2 !border-[#f38020] hover:!bg-[#f38020] hover:!scale-125 !transition-all !duration-150 !top-1/2 !-translate-y-1/2 !-right-1.5"
-        />
+        </div>
       </div>
     </Tooltip>
   );

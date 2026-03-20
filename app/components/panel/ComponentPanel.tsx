@@ -118,10 +118,16 @@ export function ComponentPanel({ provider }: ComponentPanelProps) {
                               JSON.stringify(component),
                             );
                             e.dataTransfer.effectAllowed = "copy";
+                            // Use the icon box as drag image to match the n8n-style node
+                            const iconBox =
+                              e.currentTarget.querySelector(".drag-icon");
+                            if (iconBox) {
+                              e.dataTransfer.setDragImage(iconBox, 24, 24);
+                            }
                           }}
                           className="w-full text-left px-2 py-2 rounded hover:bg-[#252525] transition-colors cursor-grab active:cursor-grabbing flex items-center gap-3 group"
                         >
-                          <div className="flex-shrink-0 w-8 h-8 rounded bg-[#252525] flex items-center justify-center group-hover:bg-[#333333] transition-colors">
+                          <div className="drag-icon flex-shrink-0 w-8 h-8 rounded bg-[#252525] flex items-center justify-center group-hover:bg-[#333333] transition-colors">
                             <IconComponent
                               width={16}
                               height={16}
