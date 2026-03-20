@@ -94,6 +94,15 @@ body {
   }
 }
 
+/* Hide scrollbars but keep scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Focus states for keyboard accessibility */
 button:focus-visible,
 a:focus-visible,

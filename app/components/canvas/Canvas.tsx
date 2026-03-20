@@ -9,10 +9,11 @@ import {
   MiniMap,
   type OnSelectionChangeParams,
   ReactFlow,
+  type ReactFlowInstance,
   useEdgesState,
   useNodesState,
 } from "@xyflow/react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import "@xyflow/react/dist/style.css";
 
 import { ComponentPanel } from "~/components/panel/ComponentPanel";
@@ -20,12 +21,20 @@ import { isValidConnection as checkValidConnection } from "~/lib/connection-rule
 import type { CanvasNode, CloudComponent, CloudProvider } from "~/types";
 import { CloudNode } from "./CloudNode";
 import { CodePreview } from "./CodePreview";
+import { ContainerNode } from "./ContainerNode";
 import { NodeConfig } from "./NodeConfig";
 
 const initialNodes: CanvasNode[] = [];
 const initialEdges: Edge[] = [];
 
-const nodeTypes = { cloud: CloudNode };
+const nodeTypes = { cloud: CloudNode, container: ContainerNode };
+
+const containerSizes: Record<number, { width: number; height: number }> = {
+  1: { width: 700, height: 500 },
+  2: { width: 600, height: 400 },
+  3: { width: 500, height: 350 },
+  4: { width: 350, height: 250 },
+};
 
 let nodeIdCounter = 0;
 
@@ -45,6 +54,7 @@ export function Canvas({
   const [nodes, setNodes, onNodesChangeHandler] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChangeHandler] = useEdgesState(initialEdges);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const rfInstance = useRef<ReactFlowInstance | null>(null);
 
   const selectedNode = useMemo(
     () =>
@@ -103,16 +113,76 @@ export function Canvas({
 
       const component: CloudComponent = JSON.parse(data);
 
-      const bounds = event.currentTarget.getBoundingClientRect();
-      const position = {
-        x: event.clientX - bounds.left - 75,
-        y: event.clientY - bounds.top - 25,
-      };
+      // Use ReactFlow instance for accurate flow coordinates
+      let position: { x: number; y: number };
+      if (rfInstance.current) {
+        position = rfInstance.current.screenToFlowPosition({
+          x: event.clientX,
+          y: event.clientY,
+        });
+      } else {
+        const bounds = event.currentTarget.getBoundingClientRect();
+        position = {
+          x: event.clientX - bounds.left - 75,
+          y: event.clientY - bounds.top - 25,
+        };
+      }
+
+      const isContainer = component.isContainer === true;
+      const containerLevel = component.containerLevel ?? 0;
 
       nodeIdCounter++;
+
+      // Find the innermost container at the drop point for auto-parenting
+      let parentId: string | undefined;
+      if (!isContainer || containerLevel > 1) {
+        // Find all container nodes that contain the drop point
+        const containersAtPoint = nodes
+          .filter((n) => {
+            const comp = (n as CanvasNode).data?.component;
+            if (!comp?.isContainer) return false;
+            // For container-in-container, child level must be higher
+            if (isContainer && (comp.containerLevel ?? 0) >= containerLevel)
+              return false;
+            const nodeWidth =
+              (n.measured?.width ??
+                containerSizes[comp.containerLevel ?? 3]?.width) ||
+              500;
+            const nodeHeight =
+              (n.measured?.height ??
+                containerSizes[comp.containerLevel ?? 3]?.height) ||
+              350;
+            // Check if drop point is within this container's bounds
+            // For child nodes, position is relative to parent — we need absolute position
+            const absPos = getAbsolutePosition(n, nodes);
+            return (
+              position.x >= absPos.x &&
+              position.x <= absPos.x + nodeWidth &&
+              position.y >= absPos.y &&
+              position.y <= absPos.y + nodeHeight
+            );
+          })
+          .sort(
+            (a, b) =>
+              ((b as CanvasNode).data?.component?.containerLevel ?? 0) -
+              ((a as CanvasNode).data?.component?.containerLevel ?? 0),
+          );
+
+        if (containersAtPoint.length > 0) {
+          const parent = containersAtPoint[0];
+          parentId = parent.id;
+          // Convert position to be relative to the parent
+          const parentAbsPos = getAbsolutePosition(parent, nodes);
+          position = {
+            x: position.x - parentAbsPos.x,
+            y: position.y - parentAbsPos.y,
+          };
+        }
+      }
+
       const newNode: CanvasNode = {
         id: `${component.id}-${nodeIdCounter}`,
-        type: "cloud",
+        type: isContainer ? "container" : "cloud",
         position,
         data: {
           component,
@@ -125,12 +195,27 @@ export function Canvas({
             {} as Record<string, string | number | boolean>,
           ),
         },
+        ...(isContainer
+          ? {
+              style: {
+                width: containerSizes[containerLevel]?.width ?? 500,
+                height: containerSizes[containerLevel]?.height ?? 350,
+              },
+            }
+          : {}),
+        ...(parentId
+          ? {
+              parentId,
+              extent: "parent" as const,
+              expandParent: true,
+            }
+          : {}),
       };
 
       setNodes((nds) => [...nds, newNode]);
       setSelectedNodeId(newNode.id);
     },
-    [setNodes],
+    [setNodes, nodes],
   );
 
   const onNodeUpdate = useCallback(
@@ -174,13 +259,27 @@ export function Canvas({
 
   const onNodeDelete = useCallback(
     (nodeId: string) => {
-      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+      // Cascade delete: find all descendants recursively
+      const toDelete = new Set<string>();
+      function collectDescendants(id: string) {
+        toDelete.add(id);
+        for (const n of nodes) {
+          if (n.parentId === id && !toDelete.has(n.id)) {
+            collectDescendants(n.id);
+          }
+        }
+      }
+      collectDescendants(nodeId);
+
+      setNodes((nds) => nds.filter((node) => !toDelete.has(node.id)));
       setEdges((eds) =>
-        eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId),
+        eds.filter(
+          (edge) => !toDelete.has(edge.source) && !toDelete.has(edge.target),
+        ),
       );
       setSelectedNodeId(null);
     },
-    [setNodes, setEdges],
+    [setNodes, setEdges, nodes],
   );
 
   return (
@@ -193,6 +292,9 @@ export function Canvas({
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
+            onInit={(instance) => {
+              rfInstance.current = instance;
+            }}
             onNodesChange={(changes) => {
               onNodesChangeHandler(changes);
               const updatedNodes = [...nodes];
@@ -306,4 +408,24 @@ export function Canvas({
       />
     </div>
   );
+}
+
+/** Get absolute position of a node (accounting for nested parents) */
+function getAbsolutePosition(
+  node: CanvasNode,
+  allNodes: CanvasNode[],
+): { x: number; y: number } {
+  let x = node.position.x;
+  let y = node.position.y;
+  let current = node;
+  while (current.parentId) {
+    const parent = allNodes.find((n) => n.id === current.parentId) as
+      | CanvasNode
+      | undefined;
+    if (!parent) break;
+    x += parent.position.x;
+    y += parent.position.y;
+    current = parent;
+  }
+  return { x, y };
 }

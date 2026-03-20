@@ -14,3 +14,8 @@
     stroke-dashoffset: -10;
   }
 }
+
+/* Container nodes render behind regular nodes */
+.react-flow__node-container {
+  z-index: 0 !important;
+}
