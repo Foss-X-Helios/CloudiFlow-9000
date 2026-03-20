@@ -1,5 +1,5 @@
-import { ArrowLeft, Building2, Cloud, FolderGit2, Play } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ArrowLeft, Building2, Cloud, FolderGit2, Play, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { Canvas } from "~/components/canvas/Canvas";
 import {
@@ -16,12 +16,20 @@ import type {
   Project,
 } from "~/types";
 
-const providers: { id: CloudProvider; label: string; defaultRegion: string }[] =
-  [
-    { id: "aws", label: "AWS", defaultRegion: "us-east-1" },
-    { id: "gcp", label: "GCP", defaultRegion: "us-central1" },
-    { id: "azure", label: "Azure", defaultRegion: "eastus" },
-  ];
+const providerMeta: Record<
+  CloudProvider,
+  { label: string; defaultRegion: string; color: string }
+> = {
+  aws: { label: "AWS", defaultRegion: "us-east-1", color: "#FF9900" },
+  gcp: { label: "GCP", defaultRegion: "us-central1", color: "#4285F4" },
+  azure: { label: "Azure", defaultRegion: "eastus", color: "#0078D4" },
+};
+
+interface CanvasTab {
+  provider: CloudProvider;
+  nodes: CanvasNode[];
+  edges: Edge[];
+}
 
 export function meta() {
   return [{ title: "Editor - CloudiFlow-9000" }];
@@ -30,14 +38,19 @@ export function meta() {
 export default function Editor() {
   const params = useParams<{ orgId: string; projectId: string }>();
   const navigate = useNavigate();
-  const [outputFormat, setOutputFormat] = useState<
-    "terraform" | "pulumi" | "ansible"
-  >("terraform");
-  const [_nodes, setNodes] = useState<CanvasNode[]>([]);
-  const [_edges, setEdges] = useState<Edge[]>([]);
+  const [outputFormat, setOutputFormat] = useState<"terraform" | "pulumi">(
+    "terraform",
+  );
   const [org, setOrg] = useState<Organization | null>(null);
   const [project, setProject] = useState<Project | null>(null);
-  const [provider, setProvider] = useState<CloudProvider>("aws");
+
+  // Multi-tab canvas state
+  const [tabs, setTabs] = useState<CanvasTab[]>([
+    { provider: "aws", nodes: [], edges: [] },
+  ]);
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
+
+  const activeTab = tabs[activeTabIndex];
 
   useEffect(() => {
     if (!params.orgId || !params.projectId) {
@@ -58,19 +71,80 @@ export default function Editor() {
     setProject(foundProject);
 
     const canvasState = getCanvasState(params.projectId);
-    setProvider(canvasState.provider);
-    setOutputFormat(canvasState.outputFormat);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const providerOverride = urlParams.get("provider") as CloudProvider | null;
+    const initialProvider =
+      providerOverride && ["aws", "gcp", "azure"].includes(providerOverride)
+        ? providerOverride
+        : canvasState.provider;
+
+    setTabs([{ provider: initialProvider, nodes: [], edges: [] }]);
+    setActiveTabIndex(0);
+
+    const format = canvasState.outputFormat;
+    if (format === "terraform" || format === "pulumi") {
+      setOutputFormat(format);
+    }
   }, [params.orgId, params.projectId, navigate]);
 
-  const handleProviderChange = (newProvider: CloudProvider) => {
-    setProvider(newProvider);
-    const defaultRegion = providers.find(
-      (p) => p.id === newProvider,
-    )?.defaultRegion;
-    if (params.projectId) {
-      updateCanvasProvider(params.projectId, newProvider, defaultRegion ?? "");
-    }
-  };
+  const handleProviderSelect = useCallback(
+    (newProvider: CloudProvider) => {
+      // Check if a tab for this provider already exists
+      const existingIndex = tabs.findIndex((t) => t.provider === newProvider);
+      if (existingIndex !== -1) {
+        setActiveTabIndex(existingIndex);
+      } else {
+        // Create a new tab
+        const newTabs = [
+          ...tabs,
+          { provider: newProvider, nodes: [], edges: [] },
+        ];
+        setTabs(newTabs);
+        setActiveTabIndex(newTabs.length - 1);
+      }
+
+      // Persist
+      const defaultRegion = providerMeta[newProvider].defaultRegion;
+      if (params.projectId) {
+        updateCanvasProvider(params.projectId, newProvider, defaultRegion);
+      }
+    },
+    [tabs, params.projectId],
+  );
+
+  const closeTab = useCallback(
+    (index: number) => {
+      if (tabs.length <= 1) return; // Can't close last tab
+      const newTabs = tabs.filter((_, i) => i !== index);
+      setTabs(newTabs);
+      // Adjust active index
+      if (activeTabIndex >= newTabs.length) {
+        setActiveTabIndex(newTabs.length - 1);
+      } else if (activeTabIndex > index) {
+        setActiveTabIndex(activeTabIndex - 1);
+      }
+    },
+    [tabs, activeTabIndex],
+  );
+
+  const handleNodesChange = useCallback(
+    (nodes: CanvasNode[]) => {
+      setTabs((prev) =>
+        prev.map((tab, i) => (i === activeTabIndex ? { ...tab, nodes } : tab)),
+      );
+    },
+    [activeTabIndex],
+  );
+
+  const handleEdgesChange = useCallback(
+    (edges: Edge[]) => {
+      setTabs((prev) =>
+        prev.map((tab, i) => (i === activeTabIndex ? { ...tab, edges } : tab)),
+      );
+    },
+    [activeTabIndex],
+  );
 
   if (!org || !project) {
     return null;
@@ -115,27 +189,27 @@ export default function Editor() {
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Provider toggle */}
+          {/* Provider selector — adds new tab */}
           <div className="flex items-center gap-1 bg-[#111] rounded-full p-1 border border-[#1a1a1a]">
-            {providers.map((p) => (
+            {(["aws", "gcp", "azure"] as const).map((p) => (
               <button
                 type="button"
-                key={p.id}
-                onClick={() => handleProviderChange(p.id)}
+                key={p}
+                onClick={() => handleProviderSelect(p)}
                 className={`px-3 py-1 rounded-full text-[12px] font-medium transition-all duration-200 ${
-                  provider === p.id
+                  activeTab?.provider === p
                     ? "bg-[#f38020] text-white shadow-[0_0_10px_rgba(243,128,32,0.2)]"
                     : "text-[#666] hover:text-[#ccc]"
                 }`}
               >
-                {p.label}
+                {providerMeta[p].label}
               </button>
             ))}
           </div>
 
           {/* Format toggle */}
           <div className="flex items-center gap-1 bg-[#111] rounded-full p-1 border border-[#1a1a1a]">
-            {(["terraform", "pulumi", "ansible"] as const).map((format) => (
+            {(["terraform", "pulumi"] as const).map((format) => (
               <button
                 type="button"
                 key={format}
@@ -167,13 +241,71 @@ export default function Editor() {
         </div>
       </header>
 
-      <main className="h-[calc(100vh-3.5rem)]">
-        <Canvas
-          outputFormat={outputFormat}
-          onNodesChange={setNodes}
-          onEdgesChange={setEdges}
-          provider={provider}
-        />
+      <main className="h-[calc(100vh-3.5rem)] flex flex-col">
+        {/* Canvas tabs — SegmentedControl */}
+        {tabs.length > 1 && (
+          <div className="h-9 bg-[#0a0a0a] border-b border-[#1a1a1a] flex items-center px-2 gap-1 flex-shrink-0">
+            {tabs.map((tab, index) => {
+              const meta = providerMeta[tab.provider];
+              const isActive = index === activeTabIndex;
+              const tabKey = `tab-${tab.provider}`;
+              return (
+                <div
+                  key={tabKey}
+                  className={`flex items-center gap-2 px-3 py-1 rounded-md text-[12px] font-medium transition-all duration-150 group cursor-pointer ${
+                    isActive
+                      ? "bg-[#1a1a1a] text-white border border-[#333]"
+                      : "text-[#666] hover:text-[#aaa] hover:bg-[#111]"
+                  }`}
+                  onClick={() => setActiveTabIndex(index)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") setActiveTabIndex(index);
+                  }}
+                  role="tab"
+                  tabIndex={0}
+                  aria-selected={isActive}
+                >
+                  <span
+                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: meta.color }}
+                  />
+                  {meta.label}
+                  {tab.nodes.length > 0 && (
+                    <span className="text-[10px] text-[#555]">
+                      ({tab.nodes.length})
+                    </span>
+                  )}
+                  {tabs.length > 1 && (
+                    <button
+                      type="button"
+                      aria-label={`Close ${meta.label} tab`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        closeTab(index);
+                      }}
+                      className="ml-0.5 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-opacity"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Active canvas */}
+        <div className="flex-1">
+          {activeTab && (
+            <Canvas
+              key={`${activeTab.provider}-${activeTabIndex}`}
+              outputFormat={outputFormat}
+              onNodesChange={handleNodesChange}
+              onEdgesChange={handleEdgesChange}
+              provider={activeTab.provider}
+            />
+          )}
+        </div>
       </main>
     </div>
   );

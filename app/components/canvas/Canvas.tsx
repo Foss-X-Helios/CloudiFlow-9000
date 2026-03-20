@@ -39,7 +39,7 @@ const containerSizes: Record<number, { width: number; height: number }> = {
 let nodeIdCounter = 0;
 
 interface CanvasProps {
-  outputFormat: "terraform" | "pulumi" | "ansible";
+  outputFormat: "terraform" | "pulumi";
   onNodesChange: (nodes: CanvasNode[]) => void;
   onEdgesChange: (edges: Edge[]) => void;
   provider: CloudProvider;

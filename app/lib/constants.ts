@@ -1,7 +1,7 @@
 // App metadata
 export const APP_NAME = "CloudiFlow-9000";
 export const APP_DESCRIPTION =
-  "Visual Infrastructure-as-Code generator. Design cloud architecture, generate Terraform, Pulumi & Ansible.";
+  "Visual Infrastructure-as-Code generator. Design cloud architecture, generate Terraform & Pulumi.";
 
 // Storage keys
 export const STORAGE_KEY = "cloudforge_state";

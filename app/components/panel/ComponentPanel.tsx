@@ -127,11 +127,11 @@ export function ComponentPanel({ provider }: ComponentPanelProps) {
                           }}
                           className="w-full text-left px-2 py-2 rounded hover:bg-[#252525] transition-colors cursor-grab active:cursor-grabbing flex items-center gap-3 group"
                         >
-                          <div className="drag-icon flex-shrink-0 w-8 h-8 rounded bg-[#252525] flex items-center justify-center group-hover:bg-[#333333] transition-colors">
+                          <div className="drag-icon flex-shrink-0 w-8 h-8 flex items-center justify-center">
                             <IconComponent
-                              width={16}
-                              height={16}
-                              className="w-4 h-4 text-[#f38020]"
+                              width={24}
+                              height={24}
+                              className="w-6 h-6 text-[#f38020]"
                             />
                           </div>
                           <div className="min-w-0 flex-1">

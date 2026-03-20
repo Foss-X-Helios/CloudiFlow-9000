@@ -159,27 +159,11 @@ const instance = new aws.ec2.Instance("web", {
   tags: { Name: "web-server" },
 });`,
     },
-    {
-      label: "Ansible",
-      code: `- name: Create VPC
-  amazon.aws.ec2_vpc_net:
-    name: core-network
-    cidr_block: 10.0.0.0/16
-    region: us-east-1
-    state: present
-
-- name: Launch EC2 instance
-  amazon.aws.ec2_instance:
-    name: web-server
-    instance_type: t3.micro
-    image_id: ami-0c55b159cbfafe1f0
-    state: running`,
-    },
   ];
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setActiveFormat((prev) => (prev + 1) % 3);
+      setActiveFormat((prev) => (prev + 1) % 2);
     }, 4000);
     return () => clearInterval(interval);
   }, []);
@@ -558,7 +542,7 @@ export default function Landing() {
 
               <p className="hero-desc text-[15px] sm:text-[16px] text-[#666] leading-relaxed max-w-md mb-10 opacity-0">
                 Drag cloud components onto a canvas. Connect them. Export
-                production-ready Terraform, Pulumi, or Ansible — instantly.
+                production-ready Terraform or Pulumi code — instantly.
               </p>
 
               <div className="flex flex-wrap items-center gap-4 mb-12">
@@ -640,7 +624,7 @@ export default function Landing() {
                 step: "03",
                 icon: <Download className="w-6 h-6" />,
                 title: "Export",
-                desc: "Hit copy or download. Get production-ready IaC code in Terraform, Pulumi, or Ansible — your choice.",
+                desc: "Hit copy or download. Get production-ready IaC code in Terraform or Pulumi — your choice.",
               },
             ].map((item, _i) => (
               <div
@@ -682,12 +666,11 @@ export default function Landing() {
               <h2 className="code-showcase-text text-3xl sm:text-4xl font-bold text-white mb-6 opacity-0">
                 One design,
                 <br />
-                three formats.
+                two formats.
               </h2>
               <p className="code-showcase-text text-[15px] text-[#666] leading-relaxed mb-8 opacity-0">
-                Your visual architecture exports to Terraform HCL, Pulumi
-                TypeScript, or Ansible YAML. Switch between them with a single
-                click — no rework.
+                Your visual architecture exports to Terraform HCL or Pulumi
+                TypeScript. Switch between them with a single click — no rework.
               </p>
               <div className="code-showcase-text flex flex-wrap gap-3 opacity-0">
                 {[
@@ -698,10 +681,6 @@ export default function Landing() {
                   {
                     icon: <GitBranch className="w-3.5 h-3.5" />,
                     label: "Pulumi TS",
-                  },
-                  {
-                    icon: <Boxes className="w-3.5 h-3.5" />,
-                    label: "Ansible YAML",
                   },
                 ].map((f) => (
                   <div

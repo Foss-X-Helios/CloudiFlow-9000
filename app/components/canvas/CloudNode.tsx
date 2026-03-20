@@ -61,7 +61,7 @@ function CloudNodeComponent({ data, selected }: NodeProps<CanvasNode>) {
             <Handle
               type="target"
               position={Position.Left}
-              className="!w-3 !h-3 !bg-[#1a1a1a] !border-2 !border-[#f38020] hover:!bg-[#f38020] hover:!scale-125 !transition-all !duration-150 !top-1/2 !-translate-y-1/2 !-left-1.5"
+              className="!w-3 !h-3 !bg-[#1a1a1a] !border-2 !border-[#f38020] hover:!bg-[#f38020] hover:!scale-125 !transition-all !duration-150 !top-[24px] !-translate-y-1/2 !-left-1.5"
             />
           )}
 
@@ -75,7 +75,7 @@ function CloudNodeComponent({ data, selected }: NodeProps<CanvasNode>) {
             <Handle
               type="source"
               position={Position.Right}
-              className="!w-3 !h-3 !bg-[#1a1a1a] !border-2 !border-[#f38020] hover:!bg-[#f38020] hover:!scale-125 !transition-all !duration-150 !top-1/2 !-translate-y-1/2 !-right-1.5"
+              className="!w-3 !h-3 !bg-[#1a1a1a] !border-2 !border-[#f38020] hover:!bg-[#f38020] hover:!scale-125 !transition-all !duration-150 !top-[24px] !-translate-y-1/2 !-right-1.5"
             />
           )}
         </div>

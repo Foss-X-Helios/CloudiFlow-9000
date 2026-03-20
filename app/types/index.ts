@@ -52,7 +52,7 @@ export interface ProjectState {
   nodes: CanvasNode[];
   edges: CanvasEdge[];
   generatedCode: string;
-  outputFormat: "terraform" | "pulumi" | "ansible";
+  outputFormat: "terraform" | "pulumi";
 }
 
 export interface Organization {

@@ -118,7 +118,7 @@ export function deleteProject(orgId: string, projectId: string): void {
 export interface CanvasState {
   nodes: CanvasNode[];
   edges: Edge[];
-  outputFormat: "terraform" | "pulumi" | "ansible";
+  outputFormat: "terraform" | "pulumi";
   provider: CloudProvider;
   region: string;
 }

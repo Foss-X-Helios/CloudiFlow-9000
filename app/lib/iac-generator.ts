@@ -276,15 +276,13 @@ export function generateAnsible(nodes: CanvasNode[]): string {
 
 export function generateCode(
   nodes: CanvasNode[],
-  format: "terraform" | "pulumi" | "ansible",
+  format: "terraform" | "pulumi",
 ): string {
   switch (format) {
     case "terraform":
       return generateTerraform(nodes);
     case "pulumi":
       return generatePulumi(nodes);
-    case "ansible":
-      return generateAnsible(nodes);
     default:
       return generateTerraform(nodes);
   }
