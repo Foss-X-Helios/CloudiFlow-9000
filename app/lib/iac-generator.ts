@@ -2,7 +2,7 @@ import {
   GENERATOR_COMMENT_HASH,
   GENERATOR_COMMENT_SLASH,
 } from "~/lib/constants";
-import type { CanvasNode } from "~/types";
+import type { CanvasNode, Edge } from "~/types";
 
 function toPascalCase(str: string): string {
   return str
@@ -285,5 +285,38 @@ export function generateCode(
       return generatePulumi(nodes);
     default:
       return generateTerraform(nodes);
+  }
+}
+
+import { apiFetch } from "./api";
+
+export async function generateCodeAsync(
+  nodes: CanvasNode[],
+  edges: Edge[],
+): Promise<{ hcl: string; order: string[] }> {
+  // Map frontend node/edge structure to backend expectations
+  const backendNodes = nodes.map((n) => ({
+    id: n.id,
+    data: {
+      type: n.data.component.id.replace(/-/g, "_"), // e.g. aws-vpc -> aws_vpc
+      name: n.data.label.replace(/[\s-]+/g, "_").toLowerCase(),
+      ...n.data.config,
+    },
+  }));
+
+  const backendEdges = edges.map((e) => ({
+    source: e.source,
+    target: e.target,
+  }));
+
+  try {
+    const result = await apiFetch("/codegen/generate", {
+      method: "POST",
+      body: JSON.stringify({ nodes: backendNodes, edges: backendEdges }),
+    });
+    return result;
+  } catch (error) {
+    console.error("Failed to generate code via API:", error);
+    throw error;
   }
 }

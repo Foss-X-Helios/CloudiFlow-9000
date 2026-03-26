@@ -38,6 +38,8 @@ export interface ComponentField {
 }
 
 export interface CanvasNode extends Node {
+  id: string;
+  parentId?: string;
   data: {
     component: CloudComponent;
     config: Record<string, string | number | boolean>;

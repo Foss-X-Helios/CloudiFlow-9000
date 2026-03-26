@@ -39,6 +39,7 @@ const containerSizes: Record<number, { width: number; height: number }> = {
 let nodeIdCounter = 0;
 
 interface CanvasProps {
+  projectId: string;
   outputFormat: "terraform" | "pulumi";
   onNodesChange: (nodes: CanvasNode[]) => void;
   onEdgesChange: (edges: Edge[]) => void;
@@ -46,6 +47,7 @@ interface CanvasProps {
 }
 
 export function Canvas({
+  projectId,
   outputFormat,
   onNodesChange,
   onEdgesChange,
@@ -413,7 +415,12 @@ export function Canvas({
           )}
         </div>
 
-        <CodePreview nodes={nodes as CanvasNode[]} format={outputFormat} />
+        <CodePreview 
+          nodes={nodes as CanvasNode[]} 
+          edges={edges} 
+          format={outputFormat} 
+          projectId={projectId}
+        />
       </div>
 
       {/* Config panel — slides in when a node is selected */}

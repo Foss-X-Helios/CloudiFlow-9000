@@ -1,28 +1,58 @@
-import { Copy, DollarSign, Download, FileCode } from "lucide-react";
-import { useMemo, useState } from "react";
+import { AlertCircle, Copy, DollarSign, Download, FileCode, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DEFAULT_EXPORT_FILENAME } from "~/lib/constants";
-import { estimateCost } from "~/lib/cost-estimator";
-import { generateCode } from "~/lib/iac-generator";
-import type { CanvasNode } from "~/types";
+import { estimateCost, estimateCostAsync } from "~/lib/cost-estimator";
+import { generateCode, generateCodeAsync } from "~/lib/iac-generator";
+import type { CanvasNode, CostEstimate, Edge } from "~/types";
 
 interface CodePreviewProps {
   nodes: CanvasNode[];
+  edges: Edge[];
   format: "terraform" | "pulumi";
+  projectId: string;
 }
 
 type PanelTab = "code" | "cost";
 
-export function CodePreview({ nodes, format }: CodePreviewProps) {
+export function CodePreview({ nodes, edges, format, projectId }: CodePreviewProps) {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<PanelTab>("code");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const generatedCode = useMemo(() => {
-    return generateCode(nodes, format);
-  }, [nodes, format]);
+  const [asyncCode, setAsyncCode] = useState<string>("");
+  const [asyncCost, setAsyncCost] = useState<CostEstimate | null>(null);
 
-  const costEstimate = useMemo(() => {
-    return estimateCost(nodes);
-  }, [nodes]);
+  useEffect(() => {
+    if (nodes.length === 0) {
+      setAsyncCode("");
+      setAsyncCost(null);
+      return;
+    }
+
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [codeRes, costRes] = await Promise.all([
+          generateCodeAsync(nodes, edges),
+          estimateCostAsync(nodes),
+        ]);
+        setAsyncCode(codeRes.hcl);
+        setAsyncCost(costRes);
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch data from backend");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const timer = setTimeout(fetchData, 500); // Debounce
+    return () => clearTimeout(timer);
+  }, [nodes, edges]);
+
+  const generatedCode = asyncCode || generateCode(nodes, format);
+  const costEstimate = asyncCost || estimateCost(nodes);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(generatedCode);

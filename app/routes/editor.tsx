@@ -299,6 +299,7 @@ export default function Editor() {
           {activeTab && (
             <Canvas
               key={`${activeTab.provider}-${activeTabIndex}`}
+              projectId={params.projectId!}
               outputFormat={outputFormat}
               onNodesChange={handleNodesChange}
               onEdgesChange={handleEdgesChange}

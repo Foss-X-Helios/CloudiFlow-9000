@@ -1,7 +1,6 @@
 import anime from "animejs";
 import {
   ArrowRight,
-  Boxes,
   Cable,
   Cloud,
   Database,

@@ -147,3 +147,41 @@ export function estimateCost(nodes: CanvasNode[]): CostEstimate {
     totalYearly: totalMonthly * 12,
   };
 }
+
+import { apiFetch } from "./api";
+
+export async function estimateCostAsync(
+  nodes: CanvasNode[],
+): Promise<CostEstimate> {
+  const backendNodes = nodes
+    .filter((n) => !n.data.component.isContainer)
+    .map((n) => ({
+      id: n.id,
+      data: {
+        provider: n.data.component.provider,
+        type: n.data.component.id.replace(/-/g, "_"),
+        ...n.data.config,
+      },
+    }));
+
+  try {
+    const result = await apiFetch("/cost/estimate", {
+      method: "POST",
+      body: JSON.stringify({ nodes: backendNodes }),
+    });
+
+    return {
+      items: result.breakdown.map((item: any) => ({
+        name: nodes.find((n) => n.id === item.node)?.data.label || item.node,
+        service: item.type,
+        detail: item.fromCache ? "From Cache" : "Real-time Update",
+        monthlyCost: item.hourlyRate * 730,
+      })),
+      totalMonthly: result.totals.monthly,
+      totalYearly: result.totals.yearly,
+    };
+  } catch (error) {
+    console.error("Failed to estimate cost via API:", error);
+    throw error;
+  }
+}
