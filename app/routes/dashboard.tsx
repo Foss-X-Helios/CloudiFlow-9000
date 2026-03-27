@@ -5,12 +5,18 @@ import {
   Building2,
   Cloud,
   FolderGit2,
+  Loader2,
   Plus,
+  Settings,
   Trash2,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
+import {
+  createCloudConnector,
+  type ConnectorProvider,
+} from "~/lib/api";
 import {
   createOrganization,
   createProject,
@@ -28,6 +34,7 @@ export function meta() {
 type ModalState =
   | { type: "none" }
   | { type: "new-org" }
+  | { type: "connectors" }
   | { type: "new-project"; orgId: string }
   | {
       type: "confirm-delete-org";
@@ -48,7 +55,98 @@ export default function Dashboard() {
   const [modal, setModal] = useState<ModalState>({ type: "none" });
   const [orgName, setOrgName] = useState("");
   const [projectName, setProjectName] = useState("");
+  const [connectorOrgId, setConnectorOrgId] = useState("");
+  const [connectorProvider, setConnectorProvider] =
+    useState<ConnectorProvider>("aws");
+  const [connectorCredentials, setConnectorCredentials] = useState<
+    Record<string, string>
+  >({
+    accessKeyId: "",
+    secretAccessKey: "",
+    region: "",
+  });
+  const [isSavingConnector, setIsSavingConnector] = useState(false);
+  const [connectorError, setConnectorError] = useState<string | null>(null);
+  const [connectorSuccess, setConnectorSuccess] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const connectorFieldMeta: Record<
+    ConnectorProvider,
+    { name: string; label: string; placeholder: string; sensitive?: boolean }[]
+  > = {
+    aws: [
+      {
+        name: "accessKeyId",
+        label: "Access Key ID",
+        placeholder: "AKIA...",
+      },
+      {
+        name: "secretAccessKey",
+        label: "Secret Access Key",
+        placeholder: "••••••••",
+        sensitive: true,
+      },
+      {
+        name: "region",
+        label: "Region",
+        placeholder: "us-east-1",
+      },
+    ],
+    gcp: [
+      {
+        name: "projectId",
+        label: "Project ID",
+        placeholder: "my-gcp-project",
+      },
+      {
+        name: "serviceAccountKey",
+        label: "Service Account Key (JSON)",
+        placeholder: '{"type":"service_account",...}',
+        sensitive: true,
+      },
+      {
+        name: "region",
+        label: "Region",
+        placeholder: "us-central1",
+      },
+    ],
+    azure: [
+      {
+        name: "tenantId",
+        label: "Tenant ID",
+        placeholder: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      },
+      {
+        name: "clientId",
+        label: "Client ID",
+        placeholder: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      },
+      {
+        name: "clientSecret",
+        label: "Client Secret",
+        placeholder: "••••••••",
+        sensitive: true,
+      },
+      {
+        name: "subscriptionId",
+        label: "Subscription ID",
+        placeholder: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      },
+    ],
+  };
+
+  const buildDefaultCredentials = useCallback(
+    (provider: ConnectorProvider): Record<string, string> => {
+      return connectorFieldMeta[provider].reduce<Record<string, string>>(
+        (result, field) => {
+          result[field.name] = "";
+          return result;
+        },
+        {},
+      );
+    },
+    [connectorFieldMeta],
+  );
 
   const refresh = useCallback(() => setOrgs(getOrganizations()), []);
 
@@ -120,18 +218,84 @@ export default function Dashboard() {
     refresh();
   };
 
+  const openConnectionsModal = () => {
+    setConnectorError(null);
+    setConnectorSuccess(null);
+    setConnectorProvider("aws");
+    setConnectorCredentials(buildDefaultCredentials("aws"));
+    setConnectorOrgId((previous) => previous || orgs[0]?.id || "");
+    setModal({ type: "connectors" });
+  };
+
+  const handleConnectorProviderChange = (provider: ConnectorProvider) => {
+    setConnectorProvider(provider);
+    setConnectorCredentials(buildDefaultCredentials(provider));
+    setConnectorError(null);
+    setConnectorSuccess(null);
+  };
+
+  const handleConnectorFieldChange = (field: string, value: string) => {
+    setConnectorCredentials((previous) => ({ ...previous, [field]: value }));
+    setConnectorError(null);
+    setConnectorSuccess(null);
+  };
+
+  const handleSaveConnector = async () => {
+    if (!connectorOrgId) {
+      setConnectorError("Select an organization first.");
+      return;
+    }
+
+    const missingRequiredField = connectorFieldMeta[connectorProvider].find(
+      (field) => !connectorCredentials[field.name]?.trim(),
+    );
+
+    if (missingRequiredField) {
+      setConnectorError(`Please provide ${missingRequiredField.label}.`);
+      return;
+    }
+
+    setIsSavingConnector(true);
+    setConnectorError(null);
+    setConnectorSuccess(null);
+
+    try {
+      await createCloudConnector({
+        orgId: connectorOrgId,
+        provider: connectorProvider,
+        credentials: connectorCredentials,
+      });
+      setConnectorSuccess("Cloud connector saved successfully.");
+      setConnectorCredentials(buildDefaultCredentials(connectorProvider));
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to save connector.";
+      setConnectorError(message);
+    } finally {
+      setIsSavingConnector(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e3e3e3]">
       {/* Header */}
       <header className="h-16 border-b border-[#151515] flex items-center justify-between px-8 backdrop-blur-md bg-[#0a0a0a]/90 sticky top-0 z-20">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#f38020] to-[#e06000] flex items-center justify-center shadow-[0_0_15px_rgba(243,128,32,0.15)]">
+          <div className="w-8 h-8 rounded-lg bg-linear-to-br from-[#f38020] to-[#e06000] flex items-center justify-center shadow-[0_0_15px_rgba(243,128,32,0.15)]">
             <Cloud className="w-4 h-4 text-white" />
           </div>
           <span className="text-[15px] font-semibold text-white tracking-tight">
             CloudiFlow-9000
           </span>
         </div>
+        <button
+          type="button"
+          onClick={openConnectionsModal}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-[#111] border border-[#222] hover:border-[#f38020]/30 rounded-lg text-[13px] text-[#ccc] hover:text-white transition-all duration-200"
+        >
+          <Settings className="w-3.5 h-3.5" />
+          Connections
+        </button>
         <button
           type="button"
           onClick={() => setModal({ type: "new-org" })}
@@ -300,10 +464,129 @@ export default function Dashboard() {
                   type="button"
                   onClick={handleCreateOrg}
                   disabled={!orgName.trim()}
-                  className="w-full py-3 bg-gradient-to-r from-[#f38020] to-[#e06000] text-white rounded-xl text-[14px] font-medium disabled:opacity-40 transition-all"
+                  className="w-full py-3 bg-linear-to-r from-[#f38020] to-[#e06000] text-white rounded-xl text-[14px] font-medium disabled:opacity-40 transition-all"
                 >
                   Create Organization
                 </button>
+              </>
+            )}
+
+            {modal.type === "connectors" && (
+              <>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-[16px] font-semibold text-white">
+                    Cloud Connections
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setModal({ type: "none" })}
+                    className="text-[#666] hover:text-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {orgs.length === 0 ? (
+                  <p className="text-[13px] text-[#777]">
+                    Create an organization first to add connectors.
+                  </p>
+                ) : (
+                  <>
+                    <div className="mb-4">
+                      <label
+                        htmlFor="connector-org"
+                        className="block text-[12px] font-medium text-[#999] uppercase tracking-wider mb-2"
+                      >
+                        Organization
+                      </label>
+                      <select
+                        id="connector-org"
+                        value={connectorOrgId}
+                        onChange={(event) =>
+                          setConnectorOrgId(event.target.value)
+                        }
+                        className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#222] rounded-xl text-[14px] text-white focus:outline-none focus:border-[#f38020] transition-colors"
+                      >
+                        {orgs.map((org) => (
+                          <option key={org.id} value={org.id}>
+                            {org.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="block text-[12px] font-medium text-[#999] uppercase tracking-wider mb-2">
+                        Provider
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {(["aws", "gcp", "azure"] as const).map((provider) => (
+                          <button
+                            key={provider}
+                            type="button"
+                            onClick={() => handleConnectorProviderChange(provider)}
+                            className={`py-2 rounded-lg border text-[12px] font-medium transition-colors ${
+                              connectorProvider === provider
+                                ? "bg-[#f38020]/15 border-[#f38020]/40 text-[#f4a45f]"
+                                : "bg-[#0a0a0a] border-[#222] text-[#888] hover:text-white"
+                            }`}
+                          >
+                            {provider.toUpperCase()}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 mb-5">
+                      {connectorFieldMeta[connectorProvider].map((field) => (
+                        <div key={field.name}>
+                          <label
+                            htmlFor={`connector-${field.name}`}
+                            className="block text-[12px] font-medium text-[#999] uppercase tracking-wider mb-2"
+                          >
+                            {field.label}
+                          </label>
+                          <input
+                            id={`connector-${field.name}`}
+                            type={field.sensitive ? "password" : "text"}
+                            value={connectorCredentials[field.name] || ""}
+                            onChange={(event) =>
+                              handleConnectorFieldChange(
+                                field.name,
+                                event.target.value,
+                              )
+                            }
+                            placeholder={field.placeholder}
+                            className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#222] rounded-xl text-[14px] text-white placeholder-[#444] focus:outline-none focus:border-[#f38020] transition-colors"
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {connectorError && (
+                      <p className="text-[12px] text-red-400 mb-3">
+                        {connectorError}
+                      </p>
+                    )}
+                    {connectorSuccess && (
+                      <p className="text-[12px] text-emerald-400 mb-3">
+                        {connectorSuccess}
+                      </p>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={handleSaveConnector}
+                      disabled={isSavingConnector}
+                      className="w-full py-3 bg-linear-to-r from-[#f38020] to-[#e06000] text-white rounded-xl text-[14px] font-medium disabled:opacity-40 transition-all inline-flex items-center justify-center gap-2"
+                    >
+                      {isSavingConnector && (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      )}
+                      {isSavingConnector ? "Saving..." : "Save Connector"}
+                    </button>
+                  </>
+                )}
               </>
             )}
 
@@ -344,7 +627,7 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => handleCreateProject(modal.orgId)}
                   disabled={!projectName.trim()}
-                  className="w-full py-3 bg-gradient-to-r from-[#f38020] to-[#e06000] text-white rounded-xl text-[14px] font-medium disabled:opacity-40 transition-all"
+                  className="w-full py-3 bg-linear-to-r from-[#f38020] to-[#e06000] text-white rounded-xl text-[14px] font-medium disabled:opacity-40 transition-all"
                 >
                   Create & Open Editor
                 </button>

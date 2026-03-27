@@ -1,7 +1,21 @@
-import { ArrowLeft, Building2, Cloud, FolderGit2, Play, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Building2,
+  Cloud,
+  FolderGit2,
+  Loader2,
+  Play,
+  X,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { Canvas } from "~/components/canvas/Canvas";
+import {
+  createDeploymentEventSource,
+  runDeployment,
+} from "~/lib/api";
+import { generateCodeAsync } from "~/lib/iac-generator";
 import {
   getCanvasState,
   getOrganization,
@@ -49,6 +63,15 @@ export default function Editor() {
     { provider: "aws", nodes: [], edges: [] },
   ]);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [deployError, setDeployError] = useState<string | null>(null);
+  const [isDeploymentModalOpen, setIsDeploymentModalOpen] = useState(false);
+  const [deploymentStatus, setDeploymentStatus] = useState<
+    "idle" | "running" | "done" | "error"
+  >("idle");
+  const [deploymentId, setDeploymentId] = useState<number | null>(null);
+  const [deploymentLogs, setDeploymentLogs] = useState<string[]>([]);
+  const deploymentEventSourceRef = useRef<EventSource | null>(null);
 
   const activeTab = tabs[activeTabIndex];
 
@@ -146,6 +169,74 @@ export default function Editor() {
     [activeTabIndex],
   );
 
+  useEffect(() => {
+    return () => {
+      deploymentEventSourceRef.current?.close();
+    };
+  }, []);
+
+  const handleDeploy = useCallback(async () => {
+    if (!params.projectId || !activeTab || activeTab.nodes.length === 0) {
+      setDeployError("Add at least one component before deploying.");
+      return;
+    }
+
+    deploymentEventSourceRef.current?.close();
+    setDeployError(null);
+    setIsDeploying(true);
+    setIsDeploymentModalOpen(true);
+    setDeploymentStatus("running");
+    setDeploymentId(null);
+    setDeploymentLogs(["[INFO] Preparing deployment..."]);
+
+    try {
+      const generated = await generateCodeAsync(activeTab.nodes, activeTab.edges);
+      setDeploymentLogs((previous) => [
+        ...previous,
+        "[INFO] IaC generated successfully.",
+      ]);
+
+      const deployment = await runDeployment(params.projectId, generated.hcl);
+      setDeploymentId(deployment.deploymentId);
+      setDeploymentLogs((previous) => [
+        ...previous,
+        `[INFO] ${deployment.message} (#${deployment.deploymentId})`,
+      ]);
+
+      const eventSource = await createDeploymentEventSource(
+        deployment.deploymentId,
+      );
+      deploymentEventSourceRef.current = eventSource;
+
+      eventSource.onmessage = (event) => {
+        const message = String(event.data ?? "");
+        setDeploymentLogs((previous) => [...previous, message]);
+        if (message.startsWith("[DONE]")) {
+          setDeploymentStatus("done");
+          deploymentEventSourceRef.current?.close();
+        }
+      };
+
+      eventSource.onerror = () => {
+        setDeploymentStatus("error");
+        setDeployError("Lost connection while streaming deployment logs.");
+        setDeploymentLogs((previous) => [
+          ...previous,
+          "[ERROR] Lost connection while streaming deployment logs.",
+        ]);
+        deploymentEventSourceRef.current?.close();
+      };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Deployment failed.";
+      setDeploymentStatus("error");
+      setDeployError(message);
+      setDeploymentLogs((previous) => [...previous, `[ERROR] ${message}`]);
+    } finally {
+      setIsDeploying(false);
+    }
+  }, [activeTab, params.projectId]);
+
   if (!org || !project) {
     return null;
   }
@@ -162,7 +253,7 @@ export default function Editor() {
           </Link>
 
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#f38020] to-[#e06000] flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-linear-to-br from-[#f38020] to-[#e06000] flex items-center justify-center">
               <Cloud className="w-3.5 h-3.5 text-white" />
             </div>
             <span className="text-[14px] font-semibold text-white">
@@ -228,15 +319,16 @@ export default function Editor() {
           <button
             type="button"
             aria-label="Deploy infrastructure"
-            onClick={() =>
-              window.alert(
-                "Deploy coming soon! For now, copy the generated code and apply it with your CLI.",
-              )
-            }
-            className="px-4 py-1.5 bg-gradient-to-r from-[#f38020] to-[#e06000] hover:from-[#ff9030] hover:to-[#f07010] text-white rounded-lg text-[12px] font-medium transition-all duration-200 flex items-center gap-1.5 shadow-[0_0_15px_rgba(243,128,32,0.15)]"
+            onClick={handleDeploy}
+            disabled={isDeploying || !activeTab || activeTab.nodes.length === 0}
+            className="px-4 py-1.5 bg-linear-to-r from-[#f38020] to-[#e06000] hover:from-[#ff9030] hover:to-[#f07010] text-white rounded-lg text-[12px] font-medium transition-all duration-200 flex items-center gap-1.5 shadow-[0_0_15px_rgba(243,128,32,0.15)]"
           >
-            <Play className="w-3 h-3" />
-            Deploy
+            {isDeploying ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <Play className="w-3 h-3" />
+            )}
+            {isDeploying ? "Deploying..." : "Deploy"}
           </button>
         </div>
       </header>
@@ -244,7 +336,7 @@ export default function Editor() {
       <main className="h-[calc(100vh-3.5rem)] flex flex-col">
         {/* Canvas tabs — SegmentedControl */}
         {tabs.length > 1 && (
-          <div className="h-9 bg-[#0a0a0a] border-b border-[#1a1a1a] flex items-center px-2 gap-1 flex-shrink-0">
+          <div className="h-9 bg-[#0a0a0a] border-b border-[#1a1a1a] flex items-center px-2 gap-1 shrink-0">
             {tabs.map((tab, index) => {
               const meta = providerMeta[tab.provider];
               const isActive = index === activeTabIndex;
@@ -266,7 +358,7 @@ export default function Editor() {
                   aria-selected={isActive}
                 >
                   <span
-                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    className="w-2 h-2 rounded-full shrink-0"
                     style={{ backgroundColor: meta.color }}
                   />
                   {meta.label}
@@ -308,6 +400,86 @@ export default function Editor() {
           )}
         </div>
       </main>
+
+      {isDeploymentModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-sm p-4"
+          onClick={() => setIsDeploymentModalOpen(false)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") setIsDeploymentModalOpen(false);
+          }}
+        >
+          <div
+            role="document"
+            className="w-full max-w-3xl bg-[#0f0f0f] border border-[#232323] rounded-2xl overflow-hidden"
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+          >
+            <div className="h-14 px-5 border-b border-[#222] flex items-center justify-between">
+              <div>
+                <h3 className="text-[15px] font-semibold text-white">
+                  Deployment Logs
+                </h3>
+                <p className="text-[11px] text-[#666]">
+                  {deploymentId ? `Deployment #${deploymentId}` : "Initializing..."}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span
+                  className={`text-[11px] px-2 py-1 rounded border ${
+                    deploymentStatus === "running"
+                      ? "text-amber-300 border-amber-500/30 bg-amber-500/10"
+                      : deploymentStatus === "done"
+                        ? "text-emerald-300 border-emerald-500/30 bg-emerald-500/10"
+                        : deploymentStatus === "error"
+                          ? "text-red-300 border-red-500/30 bg-red-500/10"
+                          : "text-[#999] border-[#333] bg-[#1a1a1a]"
+                  }`}
+                >
+                  {deploymentStatus === "running"
+                    ? "Running"
+                    : deploymentStatus === "done"
+                      ? "Completed"
+                      : deploymentStatus === "error"
+                        ? "Error"
+                        : "Idle"}
+                </span>
+
+                <button
+                  type="button"
+                  aria-label="Close deployment logs"
+                  className="text-[#777] hover:text-white transition-colors"
+                  onClick={() => setIsDeploymentModalOpen(false)}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="h-105 bg-[#080808] p-4 overflow-y-auto font-mono text-[12px] leading-relaxed text-[#bcbcbc] space-y-1">
+              {deploymentLogs.length > 0 ? (
+                deploymentLogs.map((log, index) => (
+                  <div key={`${index}-${log}`} className="wrap-break-word">
+                    {log}
+                  </div>
+                ))
+              ) : (
+                <div className="text-[#666]">Waiting for logs...</div>
+              )}
+            </div>
+
+            {deployError && (
+              <div className="px-5 py-3 border-t border-[#222] bg-red-500/5 text-red-300 text-[12px] flex items-center gap-2">
+                <AlertCircle className="w-3.5 h-3.5" />
+                {deployError}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
