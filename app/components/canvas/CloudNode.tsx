@@ -21,7 +21,8 @@ const categoryColors: Record<ComponentCategory, string> = {
 const hasInputCache = new Map<string, boolean>();
 function componentHasInput(componentId: string, provider: string): boolean {
   const key = `${provider}:${componentId}`;
-  if (hasInputCache.has(key)) return hasInputCache.get(key)!;
+  const cached = hasInputCache.get(key);
+  if (cached !== undefined) return cached;
   const allComponents =
     cloudComponents[provider as keyof typeof cloudComponents] || [];
   const result = allComponents.some((c) => c.connectsTo.includes(componentId));

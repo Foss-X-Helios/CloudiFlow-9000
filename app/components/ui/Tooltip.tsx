@@ -88,7 +88,6 @@ function RightTooltip({
 
   return (
     // biome-ignore lint/a11y/useSemanticElements: tooltip wrapper, not a fieldset
-    // biome-ignore lint/a11y/noStaticElementInteractions: hover-only tooltip trigger
     <div role="group" onMouseEnter={show} onMouseLeave={hide}>
       {children}
       {visible && (

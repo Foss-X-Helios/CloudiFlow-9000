@@ -54,7 +54,7 @@ export function Canvas({
   const [nodes, setNodes, onNodesChangeHandler] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChangeHandler] = useEdgesState(initialEdges);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const rfInstance = useRef<ReactFlowInstance | null>(null);
+  const rfInstance = useRef<ReactFlowInstance<CanvasNode, Edge> | null>(null);
 
   const selectedNode = useMemo(
     () =>

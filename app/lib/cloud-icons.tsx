@@ -71,8 +71,8 @@ const GcpCloudSql = gcpImgIcon(gcpCloudSqlSvg, "Cloud SQL");
 // --- AWS wrappers (normalize props: size → width/height) ---
 
 function awsIcon(Icon: ComponentType<{ size?: number | string }>): CloudIcon {
-  return function AwsIcon({ className, width = 24 }: CloudIconProps) {
-    return <Icon size={width} className={className} />;
+  return function AwsIcon({ width = 24 }: CloudIconProps) {
+    return <Icon size={width} />;
   };
 }
 
